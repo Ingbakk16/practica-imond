@@ -15,6 +15,8 @@ requirements.txt   lo que hay que instalar (DuckDB)
 dw/                el data warehouse: se crea solo al ejecutar run_sql.py
 generator/         el programa que creó los datos de raw/ (no hace falta usarlo)
 assets/            el diagrama de tablas de origen (DER)
+WORKFLOW.md        el flujo de trabajo para construir y validar el warehouse
+ROADMAP.md         las fases y entregables de la construcción
 ```
 
 > ⚠️ **No modifiques los archivos de `raw/`.** Son los datos de origen. Tus consultas SQL los leen y el resultado queda en `dw/`.
