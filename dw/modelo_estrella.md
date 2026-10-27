@@ -4,12 +4,17 @@ Generado por `run_sql.py` a partir de las tablas de `warehouse.duckdb`.
 
 ```mermaid
 erDiagram
+    dim_channel ||--o{ fact_nps_response : "channel_key"
     dim_channel ||--o{ fact_sales_order : "channel_key"
     dim_channel ||--o{ fact_sales_order_item : "channel_key"
+    dim_customer ||--o{ fact_nps_response : "customer_key"
     dim_customer ||--o{ fact_sales_order : "customer_key"
     dim_customer ||--o{ fact_sales_order_item : "customer_key"
+    dim_customer ||--o{ fact_web_session : "customer_key"
+    dim_date ||--o{ fact_nps_response : "date_key"
     dim_date ||--o{ fact_sales_order : "date_key"
     dim_date ||--o{ fact_sales_order_item : "date_key"
+    dim_date ||--o{ fact_web_session : "date_key"
     dim_product ||--o{ fact_sales_order_item : "product_key"
     dim_province ||--o{ fact_sales_order : "province_key"
     dim_province ||--o{ fact_sales_order_item : "province_key"
@@ -63,6 +68,15 @@ erDiagram
         VARCHAR city
         VARCHAR province_code
     }
+    fact_nps_response {
+        BIGINT nps_id PK
+        INTEGER date_key FK
+        INTEGER channel_key FK
+        INTEGER customer_key FK
+        TIMESTAMP responded_at
+        INTEGER score
+        VARCHAR comment
+    }
     fact_sales_order {
         BIGINT order_id PK
         INTEGER date_key FK
@@ -94,5 +108,15 @@ erDiagram
         DECIMAL discount_amount
         DECIMAL line_total
         DECIMAL venta_neta
+    }
+    fact_web_session {
+        BIGINT session_id PK
+        INTEGER date_key FK
+        INTEGER customer_key FK
+        TIMESTAMP started_at
+        TIMESTAMP ended_at
+        VARCHAR source
+        VARCHAR device
+        BIGINT duration_seconds
     }
 ```

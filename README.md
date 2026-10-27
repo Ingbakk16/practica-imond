@@ -151,12 +151,16 @@ DESCRIBE raw.sales_order;
 | Archivo | Qué va adentro |
 |---|---|
 | `sql/01_dimensiones.sql` | Dimensiones de fecha, canal, provincia, producto, cliente y tienda. |
-| `sql/02_hechos.sql` | Hechos de pedidos e ítems, con claves foráneas hacia las dimensiones. |
-| `sql/03_consultas.sql` | Controles de conciliación y ventas mensuales; queda ampliar los KPIs de las siguientes fases. |
+| `sql/02_hechos.sql` | Hechos de pedidos, ítems, sesiones web y respuestas NPS, con claves foráneas hacia las dimensiones. |
+| `sql/03_consultas.sql` | Controles de conciliación y KPIs de ventas, clientes, tráfico y NPS. |
 
 Cada ejecución vuelve a construir estas tablas desde los CSV. Para ampliar el modelo, pasá las consultas que probaste al archivo correspondiente. Podés agregar más archivos: se ejecutan en orden alfabético (`01_...`, `02_...`, `03_...`).
 
 Los hechos conservan todos los pedidos y sus ítems. La columna `es_venta` identifica pedidos `PAID` y `FULFILLED`; `venta_neta` es cero para `CREATED`, `CANCELLED` y `REFUNDED`. En `fact_sales_order`, `venta_neta` incluye IVA y envío; en `fact_sales_order_item`, es el importe de la línea sin IVA ni envío. Para ventas totales usá **solo** el hecho de pedidos: al unirlo con los ítems, un pedido de dos líneas multiplicaría su total. Las compras online usan la fila `Sin tienda` (`store_key = -1`).
+
+Cada fila de `fact_web_session` representa una sesión: `date_key` corresponde a `started_at` y `duration_seconds` queda `NULL` si no hay `ended_at`. Cada fila de `fact_nps_response` representa una respuesta: su fecha es `responded_at`, **no** la fecha de compra. Las sesiones y respuestas anónimas usan `customer_key = -1`; no se pueden atribuir a un cliente concreto ni a un pedido por coincidencia de canal o fecha.
+
+**Cómo se calculan los indicadores:** pedidos y ventas mensuales usan `fact_sales_order` con `es_venta`; ticket promedio = suma de `venta_neta` / cantidad de pedidos de venta; clientes compradores = clientes distintos con pedidos de venta en el mes. Usuarios web activos = clientes distintos con sesiones iniciadas ese mes, excluyendo `-1`; las sesiones anónimas se cuentan aparte, sin considerarlas personas únicas. Ventas por producto usan `fact_sales_order_item.venta_neta` (sin IVA ni envío). NPS = 100 × (promotores con puntaje 9–10 − detractores con puntaje 0–6) / total de respuestas; 7–8 son pasivos. La duración promedio excluye sesiones sin cierre. Para comparar el desglose mensual con el origen, consultá [`PERFILADO.md`](PERFILADO.md).
 
 ### 4. Armar el data warehouse
 

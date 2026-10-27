@@ -16,8 +16,7 @@ FROM dim_product
 ORDER BY product_key;
 
 
--- Controles de las fases 2 y 3. Si falla alguno, error() detiene la carga
--- antes de exportar a dw/. Los KPIs de sesiones y NPS se agregan en fase 5.
+-- Controles: si alguno falla, error() detiene la carga antes de exportar a dw/.
 
 SELECT CASE WHEN
     (SELECT COUNT(*) FROM dim_date) = 639
@@ -122,9 +121,193 @@ SELECT CASE WHEN COUNT(*) = 21
     ELSE error('Ventas mensuales: discrepancia entre raw y fact_sales_order') END AS control_meses
 FROM comparison;
 
-SELECT d.year, d.month, COUNT(*) AS pedidos, SUM(o.venta_neta) AS ventas_ars
+-- Fases 4 y 5: filas, claves y relaciones opcionales de sesiones y NPS.
+SELECT CASE WHEN
+    (SELECT COUNT(*) FROM fact_web_session) = 100363
+    AND (SELECT COUNT(*) FROM fact_nps_response) = 3083
+    AND (SELECT COUNT(*) FROM fact_sales_order WHERE customer_key = -1) = 0
+    AND (SELECT COUNT(*) FROM fact_sales_order_item WHERE customer_key = -1) = 0
+    AND (SELECT COUNT(*) FROM fact_web_session WHERE customer_key = -1) = 70751
+    AND (SELECT COUNT(*) FROM fact_nps_response WHERE customer_key = -1) = 122
+    AND (SELECT COUNT(*) FROM fact_web_session WHERE ended_at IS NULL AND duration_seconds IS NULL) = 3024
+    AND (SELECT COUNT(*) FROM fact_web_session WHERE ended_at IS NOT NULL AND duration_seconds IS NULL) = 0
+    AND (SELECT COUNT(*) FROM fact_web_session WHERE duration_seconds < 0) = 0
+    AND (SELECT COUNT(*) FROM fact_nps_response WHERE score NOT BETWEEN 0 AND 10) = 0
+    AND (SELECT COUNT(*) FROM duckdb_constraints()
+         WHERE schema_name = 'main' AND constraint_type = 'FOREIGN KEY') = 16
+    THEN 'OK: hechos digitales, anónimos y claves foráneas'
+    ELSE error('Sesiones/NPS: revisar filas, anónimos, duración o claves') END AS control_digital;
+
+-- Una clave -1 corresponde únicamente a un customer_id nulo en raw.
+-- Verificar también fecha, canal y atributos conservados en los hechos.
+SELECT CASE WHEN
+    (SELECT COUNT(*) FROM raw.web_session AS r
+     LEFT JOIN fact_web_session AS s ON s.session_id = r.session_id
+     LEFT JOIN dim_customer AS c ON c.customer_key = s.customer_key
+     WHERE s.session_id IS NULL OR s.started_at IS DISTINCT FROM r.started_at
+        OR s.ended_at IS DISTINCT FROM r.ended_at
+        OR s.source IS DISTINCT FROM r.source OR s.device IS DISTINCT FROM r.device
+        OR s.date_key IS DISTINCT FROM CAST(strftime(r.started_at, '%Y%m%d') AS INTEGER)
+        OR s.duration_seconds IS DISTINCT FROM date_diff('second', r.started_at, r.ended_at)
+        OR c.customer_id IS DISTINCT FROM r.customer_id) = 0
+    AND (SELECT COUNT(*) FROM raw.nps_response AS r
+         LEFT JOIN fact_nps_response AS n ON n.nps_id = r.nps_id
+         LEFT JOIN dim_customer AS c ON c.customer_key = n.customer_key
+         LEFT JOIN dim_channel AS ch ON ch.channel_key = n.channel_key
+         WHERE n.nps_id IS NULL OR n.responded_at IS DISTINCT FROM r.responded_at
+            OR n.date_key IS DISTINCT FROM CAST(strftime(r.responded_at, '%Y%m%d') AS INTEGER)
+            OR n.score IS DISTINCT FROM r.score OR n.comment IS DISTINCT FROM r.comment
+            OR c.customer_id IS DISTINCT FROM r.customer_id
+            OR ch.channel_id IS DISTINCT FROM r.channel_id) = 0
+    THEN 'OK: fechas y clientes anónimos fieles al origen'
+    ELSE error('Sesiones/NPS: hay filas faltantes o relaciones incorrectas') END AS control_origen_digital;
+
+-- Conteo auditable de cada tabla del warehouse.
+SELECT 'dim_date' AS tabla, COUNT(*) AS filas FROM dim_date
+UNION ALL SELECT 'dim_channel', COUNT(*) FROM dim_channel
+UNION ALL SELECT 'dim_province', COUNT(*) FROM dim_province
+UNION ALL SELECT 'dim_product', COUNT(*) FROM dim_product
+UNION ALL SELECT 'dim_customer', COUNT(*) FROM dim_customer
+UNION ALL SELECT 'dim_store', COUNT(*) FROM dim_store
+UNION ALL SELECT 'fact_sales_order', COUNT(*) FROM fact_sales_order
+UNION ALL SELECT 'fact_sales_order_item', COUNT(*) FROM fact_sales_order_item
+UNION ALL SELECT 'fact_web_session', COUNT(*) FROM fact_web_session
+UNION ALL SELECT 'fact_nps_response', COUNT(*) FROM fact_nps_response
+ORDER BY tabla;
+
+-- Reconciliar por mes el número de sesiones, usuarios identificados y anónimas.
+WITH origin AS (
+    SELECT DATE_TRUNC('month', started_at) AS month_start, COUNT(*) AS sessions,
+           COUNT(DISTINCT customer_id) AS active_users,
+           COUNT(*) FILTER (WHERE customer_id IS NULL) AS anonymous
+    FROM raw.web_session GROUP BY 1
+), warehouse AS (
+    SELECT DATE_TRUNC('month', d.date_value) AS month_start, COUNT(*) AS sessions,
+           COUNT(DISTINCT NULLIF(s.customer_key, -1)) AS active_users,
+           COUNT(*) FILTER (WHERE s.customer_key = -1) AS anonymous
+    FROM fact_web_session AS s JOIN dim_date AS d ON d.date_key = s.date_key
+    GROUP BY 1
+)
+SELECT CASE WHEN COUNT(*) = 21 AND COUNT(*) FILTER (WHERE
+    o.month_start IS NULL OR w.month_start IS NULL
+    OR o.sessions <> w.sessions OR o.active_users <> w.active_users
+    OR o.anonymous <> w.anonymous) = 0
+    THEN 'OK: sesiones y usuarios activos en 21 meses'
+    ELSE error('Sesiones: discrepancia mensual frente a raw') END AS control_sesiones
+FROM origin AS o FULL OUTER JOIN warehouse AS w USING (month_start);
+
+-- Comparar NPS por mes y canal usando los recuentos, antes de dividir.
+WITH origin AS (
+    SELECT DATE_TRUNC('month', responded_at) AS month_start, channel_id,
+           COUNT(*) AS responses, COUNT(*) FILTER (WHERE score >= 9) AS promoters,
+           COUNT(*) FILTER (WHERE score <= 6) AS detractors
+    FROM raw.nps_response GROUP BY 1, 2
+), warehouse AS (
+    SELECT DATE_TRUNC('month', d.date_value) AS month_start, ch.channel_id,
+           COUNT(*) AS responses, COUNT(*) FILTER (WHERE n.score >= 9) AS promoters,
+           COUNT(*) FILTER (WHERE n.score <= 6) AS detractors
+    FROM fact_nps_response AS n
+    JOIN dim_date AS d ON d.date_key = n.date_key
+    JOIN dim_channel AS ch ON ch.channel_key = n.channel_key
+    GROUP BY 1, 2
+)
+SELECT CASE WHEN COUNT(*) = 42 AND COUNT(*) FILTER (WHERE
+    o.month_start IS NULL OR w.month_start IS NULL
+    OR o.channel_id IS NULL OR w.channel_id IS NULL
+    OR o.responses <> w.responses OR o.promoters <> w.promoters
+    OR o.detractors <> w.detractors) = 0
+    THEN 'OK: NPS mensual por canal conciliado con raw'
+    ELSE error('NPS: discrepancia mensual frente a raw') END AS control_nps
+FROM origin AS o FULL OUTER JOIN warehouse AS w
+    ON w.month_start = o.month_start AND w.channel_id = o.channel_id;
+
+-- El ranking usa line_total sin IVA ni envío, igual que validate_raw.py.
+WITH origin AS (
+    SELECT DATE_TRUNC('month', o.order_date) AS month_start, i.product_id,
+           CAST(SUM(i.line_total) AS DECIMAL(18, 2)) AS sales
+    FROM raw.sales_order_item AS i
+    JOIN raw.sales_order AS o ON o.order_id = i.order_id
+    WHERE o.status IN ('PAID', 'FULFILLED') GROUP BY 1, 2
+), warehouse AS (
+    SELECT DATE_TRUNC('month', d.date_value) AS month_start, p.product_id,
+           SUM(i.venta_neta) AS sales
+    FROM fact_sales_order_item AS i
+    JOIN dim_date AS d ON d.date_key = i.date_key
+    JOIN dim_product AS p ON p.product_key = i.product_key
+    GROUP BY 1, 2
+)
+SELECT CASE WHEN COUNT(*) = 42 AND COUNT(*) FILTER (WHERE
+    o.month_start IS NULL OR w.month_start IS NULL
+    OR o.product_id IS NULL OR w.product_id IS NULL OR o.sales <> w.sales) = 0
+    THEN 'OK: ventas por producto en 21 meses'
+    ELSE error('Productos: discrepancia mensual frente a raw') END AS control_productos
+FROM origin AS o FULL OUTER JOIN warehouse AS w
+    ON w.month_start = o.month_start AND w.product_id = o.product_id;
+
+-- Ventas, pedidos, ticket y clientes compradores: grano de un pedido.
+SELECT d.year, d.month, COUNT(*) AS pedidos, SUM(o.venta_neta) AS ventas_ars,
+       ROUND(SUM(o.venta_neta) / COUNT(*), 2) AS ticket_promedio_ars,
+       COUNT(DISTINCT o.customer_key) AS clientes_compradores
 FROM fact_sales_order AS o
 JOIN dim_date AS d ON d.date_key = o.date_key
 WHERE o.es_venta
 GROUP BY d.year, d.month
 ORDER BY d.year, d.month;
+
+-- Ventas por canal y provincia de destino del pedido (IVA y envío incluidos).
+SELECT ch.code AS canal, p.code AS provincia, COUNT(*) AS pedidos,
+       SUM(o.venta_neta) AS ventas_ars
+FROM fact_sales_order AS o
+JOIN dim_channel AS ch ON ch.channel_key = o.channel_key
+JOIN dim_province AS p ON p.province_key = o.province_key
+WHERE o.es_venta
+GROUP BY ch.code, p.code ORDER BY ch.code, p.code;
+
+-- Ranking mensual de productos: venta de línea sin IVA ni envío.
+WITH sales AS (
+    SELECT d.year, d.month, p.name AS producto, p.product_id,
+           SUM(i.venta_neta) AS ventas_ars
+    FROM fact_sales_order_item AS i
+    JOIN dim_date AS d ON d.date_key = i.date_key
+    JOIN dim_product AS p ON p.product_key = i.product_key
+    GROUP BY d.year, d.month, p.name, p.product_id
+)
+SELECT year, month, producto, ventas_ars,
+       ROW_NUMBER() OVER (PARTITION BY year, month
+                          ORDER BY ventas_ars DESC, product_id) AS posicion
+FROM sales ORDER BY year, month, posicion;
+
+-- Usuarios activos = clientes identificados con sesión iniciada en el mes.
+-- Sesiones anónimas no se interpretan como usuarios únicos.
+SELECT d.year, d.month, COUNT(*) AS sesiones,
+       COUNT(DISTINCT NULLIF(s.customer_key, -1)) AS usuarios_activos,
+       COUNT(*) FILTER (WHERE s.customer_key = -1) AS sesiones_anonimas
+FROM fact_web_session AS s
+JOIN dim_date AS d ON d.date_key = s.date_key
+GROUP BY d.year, d.month ORDER BY d.year, d.month;
+
+-- AVG ignora los NULL: las sesiones sin cierre no sesgan la duración media.
+SELECT source, device, COUNT(*) AS sesiones,
+       COUNT(duration_seconds) AS sesiones_con_cierre,
+       ROUND(AVG(duration_seconds), 1) AS duracion_media_segundos
+FROM fact_web_session GROUP BY source, device ORDER BY source, device;
+
+-- NPS global y por canal: pasivos (7-8) quedan en el denominador.
+SELECT CASE WHEN GROUPING(ch.code) = 1 THEN 'TOTAL' ELSE ch.code END AS canal,
+       COUNT(*) AS respuestas,
+       COUNT(*) FILTER (WHERE n.score >= 9) AS promotores,
+       COUNT(*) FILTER (WHERE n.score BETWEEN 7 AND 8) AS pasivos,
+       COUNT(*) FILTER (WHERE n.score <= 6) AS detractores,
+       ROUND(100.0 * (COUNT(*) FILTER (WHERE n.score >= 9)
+           - COUNT(*) FILTER (WHERE n.score <= 6)) / COUNT(*), 1) AS nps
+FROM fact_nps_response AS n
+JOIN dim_channel AS ch ON ch.channel_key = n.channel_key
+GROUP BY ROLLUP(ch.code) ORDER BY GROUPING(ch.code) DESC, canal;
+
+-- NPS mensual por fecha de respuesta; nunca por fecha de compra.
+SELECT d.year, d.month, COUNT(*) AS respuestas,
+       ROUND(100.0 * (COUNT(*) FILTER (WHERE n.score >= 9)
+           - COUNT(*) FILTER (WHERE n.score <= 6)) / COUNT(*), 1) AS nps
+FROM fact_nps_response AS n
+JOIN dim_date AS d ON d.date_key = n.date_key
+GROUP BY d.year, d.month ORDER BY d.year, d.month;

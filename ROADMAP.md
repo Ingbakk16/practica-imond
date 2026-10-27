@@ -63,12 +63,12 @@ Construir un modelo estrella reproducible que permita analizar ventas, clientes,
 
 **Objetivo:** incorporar el comportamiento digital y la experiencia del cliente.
 
-- [ ] Crear `fact_web_session` con una fila por sesión.
-- [ ] Crear `fact_nps_response` con una fila por respuesta.
-- [ ] Relacionar sesiones con cliente cuando esté identificado.
-- [ ] Conservar sesiones y respuestas anónimas con clave `-1`.
-- [ ] Incorporar fuente, dispositivo, duración y puntaje.
-- [ ] Documentar la diferencia entre fecha de respuesta y fecha de compra.
+- [x] Crear `fact_web_session` con una fila por sesión.
+- [x] Crear `fact_nps_response` con una fila por respuesta.
+- [x] Relacionar sesiones con cliente cuando esté identificado.
+- [x] Conservar sesiones y respuestas anónimas con clave `-1`.
+- [x] Incorporar fuente, dispositivo, duración y puntaje.
+- [x] Documentar la diferencia entre fecha de respuesta y fecha de compra.
 
 **Entregable:** hechos de sesiones y NPS listos para segmentación.
 
@@ -76,16 +76,16 @@ Construir un modelo estrella reproducible que permita analizar ventas, clientes,
 
 **Objetivo:** demostrar que el modelo responde las preguntas de negocio.
 
-- [ ] Crear control de filas por tabla.
-- [ ] Crear control de claves huérfanas y dimensiones desconocidas.
-- [ ] Calcular ventas mensuales y cantidad de pedidos.
-- [ ] Calcular ticket promedio.
-- [ ] Calcular clientes y usuarios activos.
-- [ ] Calcular ventas por canal y provincia.
-- [ ] Crear ranking mensual por producto.
-- [ ] Calcular NPS total y por canal.
-- [ ] Analizar sesiones por fuente y dispositivo.
-- [ ] Comparar los resultados con los KPIs de `validate_raw.py`.
+- [x] Crear control de filas por tabla.
+- [x] Crear control de claves huérfanas y dimensiones desconocidas.
+- [x] Calcular ventas mensuales y cantidad de pedidos.
+- [x] Calcular ticket promedio.
+- [x] Calcular clientes y usuarios activos.
+- [x] Calcular ventas por canal y provincia.
+- [x] Crear ranking mensual por producto.
+- [x] Calcular NPS total y por canal.
+- [x] Analizar sesiones por fuente y dispositivo.
+- [x] Comparar los resultados con los KPIs de `validate_raw.py`.
 
 **Entregable:** `sql/03_consultas.sql` con consultas reproducibles y verificables.
 

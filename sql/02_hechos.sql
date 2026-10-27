@@ -113,3 +113,58 @@ SELECT
 FROM raw.sales_order_item AS i
 JOIN fact_sales_order AS o ON o.order_id = i.order_id
 JOIN dim_product AS p ON p.product_id = i.product_id;
+
+
+-- Grano: una sesión web. La fecha de análisis es started_at, no ended_at.
+-- La duración queda NULL cuando no se registró el cierre de la sesión.
+CREATE TABLE fact_web_session (
+    session_id       BIGINT PRIMARY KEY,
+    date_key         INTEGER NOT NULL REFERENCES dim_date (date_key),
+    customer_key     INTEGER NOT NULL REFERENCES dim_customer (customer_key),
+    started_at       TIMESTAMP NOT NULL,
+    ended_at         TIMESTAMP,
+    source           VARCHAR NOT NULL,
+    device           VARCHAR NOT NULL,
+    duration_seconds BIGINT CHECK (duration_seconds IS NULL OR duration_seconds >= 0)
+);
+
+INSERT INTO fact_web_session
+SELECT
+    s.session_id,
+    d.date_key,
+    CASE WHEN s.customer_id IS NULL THEN -1 ELSE c.customer_key END,
+    s.started_at,
+    s.ended_at,
+    s.source,
+    s.device,
+    date_diff('second', s.started_at, s.ended_at)
+FROM raw.web_session AS s
+JOIN dim_date AS d ON d.date_value = CAST(s.started_at AS DATE)
+LEFT JOIN dim_customer AS c ON c.customer_id = s.customer_id;
+
+
+-- Grano: una respuesta NPS. responded_at es la fecha de análisis; la
+-- respuesta no incluye order_id y no se atribuye a un pedido concreto.
+CREATE TABLE fact_nps_response (
+    nps_id       BIGINT PRIMARY KEY,
+    date_key     INTEGER NOT NULL REFERENCES dim_date (date_key),
+    channel_key  INTEGER NOT NULL REFERENCES dim_channel (channel_key),
+    customer_key INTEGER NOT NULL REFERENCES dim_customer (customer_key),
+    responded_at TIMESTAMP NOT NULL,
+    score        INTEGER NOT NULL CHECK (score BETWEEN 0 AND 10),
+    comment      VARCHAR
+);
+
+INSERT INTO fact_nps_response
+SELECT
+    n.nps_id,
+    d.date_key,
+    ch.channel_key,
+    CASE WHEN n.customer_id IS NULL THEN -1 ELSE c.customer_key END,
+    n.responded_at,
+    n.score,
+    n.comment
+FROM raw.nps_response AS n
+JOIN dim_date AS d ON d.date_value = CAST(n.responded_at AS DATE)
+JOIN dim_channel AS ch ON ch.channel_id = n.channel_id
+LEFT JOIN dim_customer AS c ON c.customer_id = n.customer_id;
