@@ -10,38 +10,38 @@ Construir un modelo estrella reproducible que permita analizar ventas, clientes,
 
 **Objetivo:** confirmar que el repositorio puede reproducir el estado inicial.
 
-- [ ] Crear el entorno virtual e instalar `requirements.txt`.
-- [ ] Ejecutar `python3 generator/validate_raw.py`.
-- [ ] Explorar las 13 tablas del esquema `raw`.
-- [ ] Registrar las definiciones de venta, NPS y sesiones.
-- [ ] Confirmar que `raw/` no se modifica durante el trabajo.
+- [x] Crear el entorno virtual e instalar `requirements.txt`.
+- [x] Ejecutar `python3 generator/validate_raw.py`.
+- [x] Explorar las 13 tablas del esquema `raw`.
+- [x] Registrar las definiciones de venta, NPS y sesiones.
+- [x] Confirmar que `raw/` no se modifica durante el trabajo.
 
-**Entregable:** entorno funcional y reglas de negocio identificadas.
+**Entregable:** entorno funcional y reglas de negocio identificadas en [`PERFILADO.md`](PERFILADO.md).
 
 ## Fase 1: Perfilado de fuentes
 
 **Objetivo:** conocer las columnas, relaciones, cardinalidades y nulos antes de modelar.
 
-- [ ] Revisar el esquema de cada tabla con `DESCRIBE`.
-- [ ] Medir filas, valores nulos y valores distintos de las columnas relevantes.
-- [ ] Comprobar las relaciones indicadas por el DER.
-- [ ] Identificar estados que cuentan y no cuentan como venta.
-- [ ] Definir las columnas de fecha que usará cada KPI.
+- [x] Revisar el esquema de cada tabla con `DESCRIBE`.
+- [x] Medir filas, valores nulos y valores distintos de las columnas relevantes.
+- [x] Comprobar las relaciones indicadas por el DER.
+- [x] Identificar estados que cuentan y no cuentan como venta.
+- [x] Definir las columnas de fecha que usará cada KPI.
 
-**Entregable:** inventario de fuentes y reglas de transformación.
+**Entregable:** inventario de fuentes y reglas de transformación en [`PERFILADO.md`](PERFILADO.md).
 
 ## Fase 2: Dimensiones
 
 **Objetivo:** crear las dimensiones reutilizables del modelo estrella.
 
-- [ ] Completar `dim_product`, incluyendo categoría y familia.
-- [ ] Crear `dim_date` para el período 2024-01-01 a 2025-09-30.
-- [ ] Crear `dim_channel`.
-- [ ] Crear `dim_province`.
-- [ ] Crear `dim_customer`.
-- [ ] Crear `dim_store`.
-- [ ] Resolver nulos con filas `Desconocido` cuando sea necesario.
-- [ ] Mantener las claves naturales para trazabilidad.
+- [x] Completar `dim_product`, incluyendo categoría y familia.
+- [x] Crear `dim_date` para el período 2024-01-01 a 2025-09-30.
+- [x] Crear `dim_channel`.
+- [x] Crear `dim_province`.
+- [x] Crear `dim_customer`.
+- [x] Crear `dim_store`.
+- [x] Resolver nulos con filas `Desconocido` cuando sea necesario.
+- [x] Mantener las claves naturales para trazabilidad.
 
 **Entregable:** `sql/01_dimensiones.sql` completo y validado.
 
@@ -49,13 +49,13 @@ Construir un modelo estrella reproducible que permita analizar ventas, clientes,
 
 **Objetivo:** representar correctamente el proceso comercial sin duplicar importes.
 
-- [ ] Crear `fact_sales_order` con grano de un pedido.
-- [ ] Crear `fact_sales_order_item` con grano de una línea de producto por pedido.
-- [ ] Incorporar canal, cliente, tienda, fechas y provincia.
-- [ ] Incluir subtotal, IVA, envío, total, cantidades, descuentos y ventas netas.
-- [ ] Definir claramente cómo tratar `PAID`, `FULFILLED`, `CANCELLED` y `REFUNDED`.
-- [ ] Comprobar que la suma de los ítems coincide con el subtotal del pedido.
-- [ ] Comprobar que el total del pedido no se multiplica al unirlo con ítems.
+- [x] Crear `fact_sales_order` con grano de un pedido.
+- [x] Crear `fact_sales_order_item` con grano de una línea de producto por pedido.
+- [x] Incorporar canal, cliente, tienda, fechas y provincia.
+- [x] Incluir subtotal, IVA, envío, total, cantidades, descuentos y ventas netas.
+- [x] Definir claramente cómo tratar `PAID`, `FULFILLED`, `CANCELLED` y `REFUNDED`.
+- [x] Comprobar que la suma de los ítems coincide con el subtotal del pedido.
+- [x] Comprobar que el total del pedido no se multiplica al unirlo con ítems.
 
 **Entregable:** hechos de ventas con claves foráneas y controles de conciliación.
 

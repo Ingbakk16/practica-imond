@@ -17,6 +17,7 @@ generator/         el programa que creó los datos de raw/ (no hace falta usarlo
 assets/            el diagrama de tablas de origen (DER)
 WORKFLOW.md        el flujo de trabajo para construir y validar el warehouse
 ROADMAP.md         las fases y entregables de la construcción
+PERFILADO.md        línea base, perfilado de las 13 fuentes y KPIs de referencia
 ```
 
 > ⚠️ **No modifiques los archivos de `raw/`.** Son los datos de origen. Tus consultas SQL los leen y el resultado queda en `dw/`.
@@ -145,15 +146,17 @@ DESCRIBE raw.sales_order;
 - **Necesita internet.** Sin conexión se abre una consola SQL en la terminal: terminás cada consulta con `;` y salís escribiendo `salir`.
 - **Para cerrar,** volvé a la terminal y presioná Enter.
 
-### 3. Escribir tus transformaciones en SQL
+### 3. Revisar y ampliar las transformaciones en SQL
 
 | Archivo | Qué va adentro |
 |---|---|
-| `sql/01_dimensiones.sql` | Las tablas de dimensiones. Tiene un **ejemplo resuelto** (`dim_product`) para que veas cómo se hace. |
-| `sql/02_hechos.sql` | Las tablas de hechos, con sus `FOREIGN KEY` hacia las dimensiones. |
-| `sql/03_consultas.sql` | Consultas para revisar el modelo y calcular los KPIs. |
+| `sql/01_dimensiones.sql` | Dimensiones de fecha, canal, provincia, producto, cliente y tienda. |
+| `sql/02_hechos.sql` | Hechos de pedidos e ítems, con claves foráneas hacia las dimensiones. |
+| `sql/03_consultas.sql` | Controles de conciliación y ventas mensuales; queda ampliar los KPIs de las siguientes fases. |
 
-Cuando una consulta te funciona mientras explorás, pasala al archivo que corresponde. Podés agregar más archivos: se ejecutan en orden alfabético (`01_...`, `02_...`, `03_...`).
+Cada ejecución vuelve a construir estas tablas desde los CSV. Para ampliar el modelo, pasá las consultas que probaste al archivo correspondiente. Podés agregar más archivos: se ejecutan en orden alfabético (`01_...`, `02_...`, `03_...`).
+
+Los hechos conservan todos los pedidos y sus ítems. La columna `es_venta` identifica pedidos `PAID` y `FULFILLED`; `venta_neta` es cero para `CREATED`, `CANCELLED` y `REFUNDED`. En `fact_sales_order`, `venta_neta` incluye IVA y envío; en `fact_sales_order_item`, es el importe de la línea sin IVA ni envío. Para ventas totales usá **solo** el hecho de pedidos: al unirlo con los ítems, un pedido de dos líneas multiplicaría su total. Las compras online usan la fila `Sin tienda` (`store_key = -1`).
 
 ### 4. Armar el data warehouse
 
