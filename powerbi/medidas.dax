@@ -1,0 +1,50 @@
+// Crear cada medida por separado en Power BI Desktop (Nueva medida).
+// Usar una tabla de medidas o elegir el hecho correspondiente como tabla de inicio.
+
+Ventas ARS = SUM('fact_sales_order'[venta_neta])
+
+Pedidos =
+CALCULATE(
+    COUNTROWS('fact_sales_order'),
+    'fact_sales_order'[es_venta] = TRUE()
+)
+
+Ticket Promedio ARS = DIVIDE([Ventas ARS], [Pedidos])
+
+Clientes Compradores =
+CALCULATE(
+    DISTINCTCOUNT('fact_sales_order'[customer_key]),
+    'fact_sales_order'[es_venta] = TRUE()
+)
+
+Ventas por Producto ARS = SUM('fact_sales_order_item'[venta_neta])
+
+Ranking Producto =
+RANKX(
+    ALLSELECTED('dim_product'[product_key]),
+    [Ventas por Producto ARS],
+    , DESC, DENSE
+)
+
+Sesiones = COUNTROWS('fact_web_session')
+
+Sesiones Anonimas =
+CALCULATE([Sesiones], 'fact_web_session'[customer_key] = -1)
+
+Usuarios Activos =
+CALCULATE(
+    DISTINCTCOUNT('fact_web_session'[customer_key]),
+    'fact_web_session'[customer_key] <> -1
+)
+
+Duracion Media (s) = AVERAGE('fact_web_session'[duration_seconds])
+
+Respuestas NPS = COUNTROWS('fact_nps_response')
+
+Promotores =
+CALCULATE([Respuestas NPS], 'fact_nps_response'[score] >= 9)
+
+Detractores =
+CALCULATE([Respuestas NPS], 'fact_nps_response'[score] <= 6)
+
+NPS = DIVIDE([Promotores] - [Detractores], [Respuestas NPS]) * 100

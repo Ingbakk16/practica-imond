@@ -18,6 +18,9 @@ assets/            el diagrama de tablas de origen (DER)
 WORKFLOW.md        el flujo de trabajo para construir y validar el warehouse
 ROADMAP.md         las fases y entregables de la construcción
 PERFILADO.md        línea base, perfilado de las 13 fuentes y KPIs de referencia
+VALIDACION.md       auditoría integral del warehouse y sus exportaciones
+validate_warehouse.py  compara los CSV de dw/ con DuckDB y revisa las relaciones
+powerbi/            importación parametrizada, medidas y guía del dashboard
 ```
 
 > ⚠️ **No modifiques los archivos de `raw/`.** Son los datos de origen. Tus consultas SQL los leen y el resultado queda en `dw/`.
@@ -161,6 +164,8 @@ Los hechos conservan todos los pedidos y sus ítems. La columna `es_venta` ident
 Cada fila de `fact_web_session` representa una sesión: `date_key` corresponde a `started_at` y `duration_seconds` queda `NULL` si no hay `ended_at`. Cada fila de `fact_nps_response` representa una respuesta: su fecha es `responded_at`, **no** la fecha de compra. Las sesiones y respuestas anónimas usan `customer_key = -1`; no se pueden atribuir a un cliente concreto ni a un pedido por coincidencia de canal o fecha.
 
 **Cómo se calculan los indicadores:** pedidos y ventas mensuales usan `fact_sales_order` con `es_venta`; ticket promedio = suma de `venta_neta` / cantidad de pedidos de venta; clientes compradores = clientes distintos con pedidos de venta en el mes. Usuarios web activos = clientes distintos con sesiones iniciadas ese mes, excluyendo `-1`; las sesiones anónimas se cuentan aparte, sin considerarlas personas únicas. Ventas por producto usan `fact_sales_order_item.venta_neta` (sin IVA ni envío). NPS = 100 × (promotores con puntaje 9–10 − detractores con puntaje 0–6) / total de respuestas; 7–8 son pasivos. La duración promedio excluye sesiones sin cierre. Para comparar el desglose mensual con el origen, consultá [`PERFILADO.md`](PERFILADO.md).
+
+Para validar toda la construcción y contrastar cada CSV con su tabla de DuckDB, ejecutá `python validate_warehouse.py` después de `python run_sql.py`. Los resultados se detallan en [`VALIDACION.md`](VALIDACION.md). Para llevar el modelo a Power BI Desktop, seguí la [guía de importación y medidas](powerbi/README.md).
 
 ### 4. Armar el data warehouse
 

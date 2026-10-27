@@ -93,15 +93,15 @@ Construir un modelo estrella reproducible que permita analizar ventas, clientes,
 
 **Objetivo:** asegurar que el proceso completo sea repetible.
 
-- [ ] Ejecutar la validación del origen.
-- [ ] Ejecutar `python3 run_sql.py` desde un estado limpio.
-- [ ] Revisar todos los CSV de `dw/`.
-- [ ] Revisar `dw/modelo_estrella.md`.
-- [ ] Confirmar que cada hecho tiene el grano documentado.
-- [ ] Comparar totales entre origen, hechos y consultas KPI.
-- [ ] Probar casos con `NULL`, pedidos cancelados, devoluciones y clientes anónimos.
+- [x] Ejecutar la validación del origen.
+- [x] Ejecutar `python3 run_sql.py` desde un estado limpio.
+- [x] Revisar todos los CSV de `dw/`.
+- [x] Revisar `dw/modelo_estrella.md`.
+- [x] Confirmar que cada hecho tiene el grano documentado.
+- [x] Comparar totales entre origen, hechos y consultas KPI.
+- [x] Probar casos con `NULL`, pedidos cancelados, devoluciones y clientes anónimos.
 
-**Entregable:** warehouse generado sin errores y con resultados conciliados.
+**Entregable:** warehouse generado sin errores y con resultados conciliados en [`VALIDACION.md`](VALIDACION.md); auditoría reproducible con `python validate_warehouse.py`.
 
 ## Fase 7: Consumo en Power BI
 
@@ -113,9 +113,9 @@ Construir un modelo estrella reproducible que permita analizar ventas, clientes,
 - [ ] Crear medidas para ventas, pedidos, ticket, usuarios y NPS.
 - [ ] Crear páginas para resumen, ventas, clientes, adquisición y satisfacción.
 - [ ] Verificar que los filtros de fecha, canal, provincia y producto funcionen.
-- [ ] Documentar las medidas y sus reglas de inclusión.
+- [x] Documentar las medidas y sus reglas de inclusión en [`powerbi/`](powerbi/).
 
-**Entregable:** dashboard conectado al modelo exportado y consistente con SQL.
+**Entregable:** dashboard conectado al modelo exportado y consistente con SQL. Guía, importación y medidas preparadas en [`powerbi/`](powerbi/); la fase se cierra al crear y comprobar `powerbi/EcoBottle_AR.pbix` en Power BI Desktop.
 
 ## Definición de terminado
 
