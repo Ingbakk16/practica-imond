@@ -107,15 +107,15 @@ Construir un modelo estrella reproducible que permita analizar ventas, clientes,
 
 **Objetivo:** preparar una capa analítica clara para el dashboard.
 
-- [ ] Importar los CSV de `dw/`.
-- [ ] Reproducir las relaciones del modelo estrella.
-- [ ] Ocultar claves técnicas en la vista del reporte.
-- [ ] Crear medidas para ventas, pedidos, ticket, usuarios y NPS.
-- [ ] Crear páginas para resumen, ventas, clientes, adquisición y satisfacción.
-- [ ] Verificar que los filtros de fecha, canal, provincia y producto funcionen.
+- [x] Importar los CSV de `dw/`.
+- [x] Reproducir las relaciones del modelo estrella.
+- [x] Ocultar claves técnicas en la vista del reporte.
+- [x] Crear medidas para ventas, pedidos, ticket, usuarios y NPS.
+- [x] Crear páginas para resumen, ventas, clientes, adquisición y satisfacción.
+- [x] Verificar que los filtros de fecha, canal, provincia y producto funcionen.
 - [x] Documentar las medidas y sus reglas de inclusión en [`powerbi/`](powerbi/).
 
-**Entregable:** dashboard conectado al modelo exportado y consistente con SQL. Guía, importación y medidas preparadas en [`powerbi/`](powerbi/); la fase se cierra al crear y comprobar `powerbi/EcoBottle_AR.pbix` en Power BI Desktop.
+**Entregable:** [`powerbi/EcoBottle_AR.pbix`](powerbi/EcoBottle_AR.pbix), construido y comprobado en Power BI Desktop. Incluye cinco páginas y datos importados; proyecto editable y controles en [`powerbi/ENTREGA.md`](powerbi/ENTREGA.md).
 
 ## Definición de terminado
 

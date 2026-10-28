@@ -209,3 +209,7 @@ __marimo__/
 # Data warehouse local (se regenera con run_sql.py)
 *.duckdb
 *.duckdb.wal
+
+# Cachés y configuración local de Power BI Projects
+**/.pbi/
+powerbi/.build/

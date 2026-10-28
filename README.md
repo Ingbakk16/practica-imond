@@ -2,6 +2,8 @@
 
 Este repositorio tiene los datos de **EcoBottle AR** para la práctica.
 
+**Dashboard:** [`powerbi/EcoBottle_AR.pbix`](powerbi/EcoBottle_AR.pbix), con cinco páginas, modelo y datos importados. Ver los [controles de la entrega](powerbi/ENTREGA.md) y la [guía de actualización](powerbi/README.md).
+
 - **Consigna:** [Práctica](https://docs.google.com/document/d/15RNP3FVqLjO4jzh80AAkK6mUR5DOLqPxLjQxqvdzrYg/edit?usp=sharing)
 - **Diagrama de las tablas de origen (DER):** [ver más abajo](#diagrama-de-las-tablas-de-origen-der)
 

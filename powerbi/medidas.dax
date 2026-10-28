@@ -21,7 +21,7 @@ Ventas por Producto ARS = SUM('fact_sales_order_item'[venta_neta])
 
 Ranking Producto =
 RANKX(
-    ALLSELECTED('dim_product'[product_key]),
+    ALLSELECTED('dim_product'),
     [Ventas por Producto ARS],
     , DESC, DENSE
 )

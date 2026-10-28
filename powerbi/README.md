@@ -1,5 +1,11 @@
 # Dashboard EcoBottle AR — Power BI Desktop
 
+## Reporte entregado
+
+Abrí [`EcoBottle_AR.pbix`](EcoBottle_AR.pbix) en Power BI Desktop. Incluye las cinco páginas y los datos importados. Los controles realizados y las reglas de actualización están en [`ENTREGA.md`](ENTREGA.md). También se conserva el proyecto editable [`EcoBottle_AR.pbip`](EcoBottle_AR.pbip), con sus carpetas `.Report` y `.SemanticModel`.
+
+En otra computadora, ajustá **RutaDW** a la ubicación local de `dw/` antes de actualizar. Las secciones siguientes documentan cómo reconstruir la importación y el modelo manualmente.
+
 Los diez CSV validados de [`dw/`](../dw) son la fuente del reporte. Este directorio contiene la función de importación [`fnCsv.m`](fnCsv.m) y las medidas propuestas en [`medidas.dax`](medidas.dax). El modelo y los controles reproducibles se documentan en [`VALIDACION.md`](../VALIDACION.md).
 
 ## 1. Importar en Windows

@@ -1,0 +1,1281 @@
+{
+  "compatibilityLevel": 1606,
+  "model": {
+    "annotations": [
+      {
+        "name": "PBI_QueryOrder",
+        "value": "[\"RutaDW\", \"dim_date\", \"dim_channel\", \"dim_province\", \"dim_product\", \"dim_customer\", \"dim_store\", \"fact_sales_order\", \"fact_sales_order_item\", \"fact_web_session\", \"fact_nps_response\"]"
+      },
+      {
+        "name": "PBI_ProTooling",
+        "value": "[\"DevMode\"]"
+      },
+      {
+        "name": "__PBI_TimeIntelligenceEnabled",
+        "value": "0"
+      }
+    ],
+    "culture": "es-AR",
+    "dataAccessOptions": {
+      "legacyRedirects": true,
+      "returnErrorValuesAsNull": true
+    },
+    "defaultPowerBIDataSourceVersion": "powerBI_V3",
+    "expressions": [
+      {
+        "name": "RutaDW",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Text"
+          }
+        ],
+        "expression": "\"C:\\Ciencia-de-Datos\\Marketing\\ProyectoFinal\\practica-imond\\dw\" meta [IsParameterQuery=true, Type=\"Text\", IsParameterQueryRequired=true]",
+        "kind": "m",
+        "lineageTag": "5364a95d-7406-46bf-bbb5-4f770ee904af"
+      }
+    ],
+    "relationships": [
+      {
+        "name": "81770dc7-7f71-5fc9-b30b-508a7281c555",
+        "fromColumn": "date_key",
+        "fromTable": "fact_sales_order",
+        "toColumn": "date_key",
+        "toTable": "dim_date"
+      },
+      {
+        "name": "6e185bd8-166c-50e2-9a8d-fff0715a5d8a",
+        "fromColumn": "channel_key",
+        "fromTable": "fact_sales_order",
+        "toColumn": "channel_key",
+        "toTable": "dim_channel"
+      },
+      {
+        "name": "87eaa7ff-a127-5e6e-9f8d-5d12f20d761c",
+        "fromColumn": "customer_key",
+        "fromTable": "fact_sales_order",
+        "toColumn": "customer_key",
+        "toTable": "dim_customer"
+      },
+      {
+        "name": "7b9f9ef5-6c8d-5223-9008-3f460f5743bc",
+        "fromColumn": "store_key",
+        "fromTable": "fact_sales_order",
+        "toColumn": "store_key",
+        "toTable": "dim_store"
+      },
+      {
+        "name": "a057ece8-971c-5848-8587-6edde4c8f0f6",
+        "fromColumn": "province_key",
+        "fromTable": "fact_sales_order",
+        "toColumn": "province_key",
+        "toTable": "dim_province"
+      },
+      {
+        "name": "945c0646-6549-5b0d-a3b4-c292cd635130",
+        "fromColumn": "date_key",
+        "fromTable": "fact_sales_order_item",
+        "toColumn": "date_key",
+        "toTable": "dim_date"
+      },
+      {
+        "name": "44438802-d0c2-5c84-bf97-6ddae72ed2a3",
+        "fromColumn": "channel_key",
+        "fromTable": "fact_sales_order_item",
+        "toColumn": "channel_key",
+        "toTable": "dim_channel"
+      },
+      {
+        "name": "04aa87dc-f199-5afc-8197-93fb90062562",
+        "fromColumn": "customer_key",
+        "fromTable": "fact_sales_order_item",
+        "toColumn": "customer_key",
+        "toTable": "dim_customer"
+      },
+      {
+        "name": "81a4f5d6-bb91-578d-a8af-eed804bbe872",
+        "fromColumn": "store_key",
+        "fromTable": "fact_sales_order_item",
+        "toColumn": "store_key",
+        "toTable": "dim_store"
+      },
+      {
+        "name": "7653bb10-749c-58ca-b0cc-b6cff8f91b4f",
+        "fromColumn": "province_key",
+        "fromTable": "fact_sales_order_item",
+        "toColumn": "province_key",
+        "toTable": "dim_province"
+      },
+      {
+        "name": "eaa214b1-0d92-50f5-a013-268e0ddf0e26",
+        "fromColumn": "product_key",
+        "fromTable": "fact_sales_order_item",
+        "toColumn": "product_key",
+        "toTable": "dim_product"
+      },
+      {
+        "name": "d57dfbd0-2954-5090-b85f-861ac3acf7e3",
+        "fromColumn": "date_key",
+        "fromTable": "fact_web_session",
+        "toColumn": "date_key",
+        "toTable": "dim_date"
+      },
+      {
+        "name": "fbae0ff0-6073-5ce9-947e-3caddb7b1962",
+        "fromColumn": "customer_key",
+        "fromTable": "fact_web_session",
+        "toColumn": "customer_key",
+        "toTable": "dim_customer"
+      },
+      {
+        "name": "eadb38f6-1725-58d8-855d-6336a03e427d",
+        "fromColumn": "date_key",
+        "fromTable": "fact_nps_response",
+        "toColumn": "date_key",
+        "toTable": "dim_date"
+      },
+      {
+        "name": "4cac2305-7e43-50fb-a91d-45020db82e43",
+        "fromColumn": "channel_key",
+        "fromTable": "fact_nps_response",
+        "toColumn": "channel_key",
+        "toTable": "dim_channel"
+      },
+      {
+        "name": "8623c8c5-e23d-5004-9ae8-62e97ee74ccf",
+        "fromColumn": "customer_key",
+        "fromTable": "fact_nps_response",
+        "toColumn": "customer_key",
+        "toTable": "dim_customer"
+      }
+    ],
+    "sourceQueryCulture": "en-US",
+    "tables": [
+      {
+        "name": "dim_date",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ],
+        "columns": [
+          {
+            "name": "date_key",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "cce2e8ec-44c1-4fd4-9b0a-b948a440cd7c",
+            "sourceColumn": "date_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "date_value",
+            "annotations": [
+              {
+                "name": "UnderlyingDateTimeDataType",
+                "value": "Date"
+              }
+            ],
+            "dataType": "dateTime",
+            "formatString": "dd/MM/yyyy",
+            "lineageTag": "de8d303a-fee5-4dcb-8f79-15653ac7280d",
+            "sourceColumn": "date_value",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "year",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "int64",
+            "lineageTag": "705d5c03-3d9f-4692-aa7f-1471d34c9cdd",
+            "sourceColumn": "year",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "month",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "int64",
+            "lineageTag": "bae60a5e-0119-4fed-b1f3-1199770369ae",
+            "sourceColumn": "month",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "month_name",
+            "dataType": "string",
+            "lineageTag": "8a84a2b4-46ea-4e35-b3bf-58504a4c7e9f",
+            "sortByColumn": "month",
+            "sourceColumn": "month_name",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "day",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "int64",
+            "lineageTag": "5ec2eb15-1b04-43d8-94bd-2414c96c259a",
+            "sourceColumn": "day",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "day_name",
+            "dataType": "string",
+            "lineageTag": "4a8c6967-6226-4870-a554-83a94786cba3",
+            "sourceColumn": "day_name",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Año mes",
+            "dataType": "string",
+            "expression": "FORMAT(dim_date[date_value], \"yyyy-MM\")",
+            "lineageTag": "d5acdceb-7c79-4431-87b2-6c3474fa4a7f",
+            "summarizeBy": "none",
+            "type": "calculated"
+          }
+        ],
+        "lineageTag": "64915d69-cdd3-4949-9d14-4b9774fd21f9",
+        "measures": [
+          {
+            "name": "Ventas ARS",
+            "expression": "SUM('fact_sales_order'[venta_neta])",
+            "formatString": "\"$\" #,0.00;(\"$\" #,0.00);\"$\" 0.00",
+            "lineageTag": "22e3d3a6-1d0a-42e8-a9f4-d0bb63fd60c5"
+          },
+          {
+            "name": "Pedidos",
+            "expression": [
+              "CALCULATE(",
+              "    COUNTROWS('fact_sales_order'),",
+              "    'fact_sales_order'[es_venta] = TRUE()",
+              ")"
+            ],
+            "formatString": "#,0",
+            "lineageTag": "f88b322d-da35-4197-8616-2a8afdeba810"
+          },
+          {
+            "name": "Ticket Promedio ARS",
+            "expression": "DIVIDE([Ventas ARS], [Pedidos])",
+            "formatString": "\"$\" #,0.00;(\"$\" #,0.00);\"$\" 0.00",
+            "lineageTag": "30e96271-6994-49a3-a9eb-8044150d8126"
+          },
+          {
+            "name": "Clientes Compradores",
+            "expression": [
+              "CALCULATE(",
+              "    DISTINCTCOUNT('fact_sales_order'[customer_key]),",
+              "    'fact_sales_order'[es_venta] = TRUE()",
+              ")"
+            ],
+            "formatString": "#,0",
+            "lineageTag": "9289e2c9-4f89-4a56-b42c-6db43f1275d3"
+          },
+          {
+            "name": "Ventas por Producto ARS",
+            "expression": "SUM('fact_sales_order_item'[venta_neta])",
+            "formatString": "\"$\" #,0.00;(\"$\" #,0.00);\"$\" 0.00",
+            "lineageTag": "236ec790-c0f3-4585-a6e3-9a0f5f0e72a5"
+          },
+          {
+            "name": "Ranking Producto",
+            "expression": "RANKX(ALLSELECTED(dim_product), [Ventas por Producto ARS], , DESC, DENSE)",
+            "formatString": "#,0",
+            "lineageTag": "899c9e44-6a99-4d24-8378-b248b5dd81ad"
+          },
+          {
+            "name": "Sesiones",
+            "expression": "COUNTROWS('fact_web_session')",
+            "formatString": "#,0",
+            "lineageTag": "640d0e9d-76ed-42d3-843e-d816cba1bd0e"
+          },
+          {
+            "name": "Sesiones Anonimas",
+            "expression": "CALCULATE([Sesiones], 'fact_web_session'[customer_key] = -1)",
+            "formatString": "#,0",
+            "lineageTag": "e14a73ba-a62b-44a1-ad91-95b1ea20331d"
+          },
+          {
+            "name": "Usuarios Activos",
+            "expression": [
+              "CALCULATE(",
+              "    DISTINCTCOUNT('fact_web_session'[customer_key]),",
+              "    'fact_web_session'[customer_key] <> -1",
+              ")"
+            ],
+            "formatString": "#,0",
+            "lineageTag": "877b277d-4a09-4b1c-9262-f1e9b9dc9df0"
+          },
+          {
+            "name": "Duracion Media (s)",
+            "expression": "AVERAGE('fact_web_session'[duration_seconds])",
+            "formatString": "0.0",
+            "lineageTag": "9c2a7562-5409-4bc6-9b0b-7f61f66b8447"
+          },
+          {
+            "name": "Respuestas NPS",
+            "expression": "COUNTROWS('fact_nps_response')",
+            "formatString": "#,0",
+            "lineageTag": "6b41fabd-1ab5-4204-b5d4-630832a9e7a1"
+          },
+          {
+            "name": "Promotores",
+            "expression": "CALCULATE([Respuestas NPS], 'fact_nps_response'[score] >= 9)",
+            "formatString": "#,0",
+            "lineageTag": "95269b04-e4d4-4514-868f-51a9c61ddae8"
+          },
+          {
+            "name": "Detractores",
+            "expression": "CALCULATE([Respuestas NPS], 'fact_nps_response'[score] <= 6)",
+            "formatString": "#,0",
+            "lineageTag": "1086241b-1c15-4ff8-b407-a07a86945f2f"
+          },
+          {
+            "name": "NPS",
+            "expression": "DIVIDE([Promotores] - [Detractores], [Respuestas NPS]) * 100",
+            "formatString": "0.0",
+            "lineageTag": "d19d4382-5dbd-405c-af33-a7030d001903"
+          },
+          {
+            "name": "Pasivos",
+            "expression": "CALCULATE([Respuestas NPS], fact_nps_response[score] >= 7, fact_nps_response[score] <= 8)",
+            "formatString": "#,0",
+            "lineageTag": "93c82aec-dc80-415c-82ce-dc41ba3aaa3a"
+          },
+          {
+            "name": "Unidades vendidas",
+            "expression": "CALCULATE(SUM(fact_sales_order_item[quantity]), fact_sales_order_item[es_venta] = TRUE())",
+            "formatString": "#,0",
+            "lineageTag": "55392ff7-7685-4de5-bd9a-6e9ede2c3de8"
+          },
+          {
+            "name": "Porcentaje anónimas",
+            "expression": "DIVIDE([Sesiones Anonimas], [Sesiones])",
+            "formatString": "0.0%",
+            "lineageTag": "fb223179-64f4-4325-8ec0-09e9eaf6f5cd"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "dim_date",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                "    Archivo = RutaDW & \"\\dim_date.csv\",",
+                "    Origen = Csv.Document(File.Contents(Archivo), [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    Encabezados = Table.PromoteHeaders(Origen, [PromoteAllScalars=true]),",
+                "    Nulos = Table.ReplaceValue(Encabezados, \"\", null, Replacer.ReplaceValue, Table.ColumnNames(Encabezados)),",
+                "    Tipada = Table.TransformColumnTypes(Nulos, {{\"date_key\", Int64.Type}, {\"date_value\", type date}, {\"year\", Int64.Type}, {\"month\", Int64.Type}, {\"month_name\", type text}, {\"day\", Int64.Type}, {\"day_name\", type text}}, \"en-US\")",
+                "in",
+                "    Tipada"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "dim_channel",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ],
+        "columns": [
+          {
+            "name": "channel_key",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "50ac0fa9-5a13-4177-b6e7-856a85960a0c",
+            "sourceColumn": "channel_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "channel_id",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "a873f1e1-1028-4f0d-81c7-b316ad6775ed",
+            "sourceColumn": "channel_id",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "code",
+            "dataType": "string",
+            "lineageTag": "0799c7b4-2c8e-47f0-a028-fc68a01b5c5d",
+            "sourceColumn": "code",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "name",
+            "dataType": "string",
+            "lineageTag": "a71f57a0-4e71-4baf-a8f6-89a45ec335a6",
+            "sourceColumn": "name",
+            "summarizeBy": "none"
+          }
+        ],
+        "lineageTag": "6c86e9e5-909f-493f-a9b6-634820785edb",
+        "partitions": [
+          {
+            "name": "dim_channel",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                "    Archivo = RutaDW & \"\\dim_channel.csv\",",
+                "    Origen = Csv.Document(File.Contents(Archivo), [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    Encabezados = Table.PromoteHeaders(Origen, [PromoteAllScalars=true]),",
+                "    Nulos = Table.ReplaceValue(Encabezados, \"\", null, Replacer.ReplaceValue, Table.ColumnNames(Encabezados)),",
+                "    Tipada = Table.TransformColumnTypes(Nulos, {{\"channel_key\", Int64.Type}, {\"channel_id\", Int64.Type}, {\"code\", type text}, {\"name\", type text}}, \"en-US\")",
+                "in",
+                "    Tipada"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "dim_province",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ],
+        "columns": [
+          {
+            "name": "province_key",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "7c03b34b-0c38-44a1-aac0-bd90759501e3",
+            "sourceColumn": "province_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "province_id",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "ecc7087b-ac2c-4172-8361-56c79f3aa38b",
+            "sourceColumn": "province_id",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "code",
+            "dataType": "string",
+            "lineageTag": "ff9bab2b-377e-422c-9ad8-0c91aa7a1a0d",
+            "sourceColumn": "code",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "name",
+            "dataType": "string",
+            "lineageTag": "a7bb0eb2-4b1d-4744-aa00-7bf4f85b17ca",
+            "sourceColumn": "name",
+            "summarizeBy": "none"
+          }
+        ],
+        "lineageTag": "cd2ab458-2f51-4cde-87d3-63fd7a8a82ef",
+        "partitions": [
+          {
+            "name": "dim_province",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                "    Archivo = RutaDW & \"\\dim_province.csv\",",
+                "    Origen = Csv.Document(File.Contents(Archivo), [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    Encabezados = Table.PromoteHeaders(Origen, [PromoteAllScalars=true]),",
+                "    Nulos = Table.ReplaceValue(Encabezados, \"\", null, Replacer.ReplaceValue, Table.ColumnNames(Encabezados)),",
+                "    Tipada = Table.TransformColumnTypes(Nulos, {{\"province_key\", Int64.Type}, {\"province_id\", Int64.Type}, {\"code\", type text}, {\"name\", type text}}, \"en-US\")",
+                "in",
+                "    Tipada"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "dim_product",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ],
+        "columns": [
+          {
+            "name": "product_key",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "b59efc5e-8396-4c59-a2cc-bd5be3f8d0f4",
+            "sourceColumn": "product_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "product_id",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "a2ca22fc-be26-435e-8de2-6ef9462f3226",
+            "sourceColumn": "product_id",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "sku",
+            "dataType": "string",
+            "lineageTag": "17831910-a5c7-4716-977c-10a05926590e",
+            "sourceColumn": "sku",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "name",
+            "dataType": "string",
+            "lineageTag": "19332eb3-ff3e-4827-a242-432864f4b7a0",
+            "sourceColumn": "name",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "category",
+            "dataType": "string",
+            "lineageTag": "0d6f0935-665e-44ea-bd96-c125d16714f5",
+            "sourceColumn": "category",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "family",
+            "dataType": "string",
+            "lineageTag": "d13fbcc5-8f15-4250-a3ba-9d0454e27c28",
+            "sourceColumn": "family",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "list_price",
+            "dataType": "decimal",
+            "formatString": "\"$\" #,0.00;(\"$\" #,0.00);\"$\" 0.00",
+            "lineageTag": "8efcf5e9-e5a2-41df-90cf-80a321e09254",
+            "sourceColumn": "list_price",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "status",
+            "dataType": "string",
+            "lineageTag": "9ec43cfd-cde6-45e9-9f6a-2f1fe35c16cd",
+            "sourceColumn": "status",
+            "summarizeBy": "none"
+          }
+        ],
+        "lineageTag": "b6e062e0-5b40-417a-84dd-40de49a22633",
+        "partitions": [
+          {
+            "name": "dim_product",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                "    Archivo = RutaDW & \"\\dim_product.csv\",",
+                "    Origen = Csv.Document(File.Contents(Archivo), [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    Encabezados = Table.PromoteHeaders(Origen, [PromoteAllScalars=true]),",
+                "    Nulos = Table.ReplaceValue(Encabezados, \"\", null, Replacer.ReplaceValue, Table.ColumnNames(Encabezados)),",
+                "    Tipada = Table.TransformColumnTypes(Nulos, {{\"product_key\", Int64.Type}, {\"product_id\", Int64.Type}, {\"sku\", type text}, {\"name\", type text}, {\"category\", type text}, {\"family\", type text}, {\"list_price\", Currency.Type}, {\"status\", type text}}, \"en-US\")",
+                "in",
+                "    Tipada"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "dim_customer",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ],
+        "columns": [
+          {
+            "name": "customer_key",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "aa15f7d7-d264-4d5b-bd3d-298e9598e4d1",
+            "sourceColumn": "customer_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "customer_id",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "e35501cc-92cb-42de-b2fb-3aa7df47f057",
+            "sourceColumn": "customer_id",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "email",
+            "dataType": "string",
+            "lineageTag": "b600f01c-6a96-41db-9bb5-de744d976772",
+            "sourceColumn": "email",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "first_name",
+            "dataType": "string",
+            "lineageTag": "2258aee2-7530-49a4-b3ea-7a9c3ea46b21",
+            "sourceColumn": "first_name",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "last_name",
+            "dataType": "string",
+            "lineageTag": "f35d43d7-7e5b-447c-bade-2d007fa49ba2",
+            "sourceColumn": "last_name",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "status",
+            "dataType": "string",
+            "lineageTag": "a2fd698a-c31e-4f74-b9e4-d1ba6f633005",
+            "sourceColumn": "status",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "created_at",
+            "dataType": "dateTime",
+            "lineageTag": "f92d5ab2-264f-4c36-9a18-dd905a2e5bb4",
+            "sourceColumn": "created_at",
+            "summarizeBy": "none"
+          }
+        ],
+        "lineageTag": "358b0180-e7b9-4835-a772-294e8175cdb9",
+        "partitions": [
+          {
+            "name": "dim_customer",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                "    Archivo = RutaDW & \"\\dim_customer.csv\",",
+                "    Origen = Csv.Document(File.Contents(Archivo), [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    Encabezados = Table.PromoteHeaders(Origen, [PromoteAllScalars=true]),",
+                "    Nulos = Table.ReplaceValue(Encabezados, \"\", null, Replacer.ReplaceValue, Table.ColumnNames(Encabezados)),",
+                "    Tipada = Table.TransformColumnTypes(Nulos, {{\"customer_key\", Int64.Type}, {\"customer_id\", Int64.Type}, {\"email\", type text}, {\"first_name\", type text}, {\"last_name\", type text}, {\"status\", type text}, {\"created_at\", type datetime}}, \"en-US\")",
+                "in",
+                "    Tipada"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "dim_store",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ],
+        "columns": [
+          {
+            "name": "store_key",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "2fa432b0-147e-4ec8-a724-bb598719be80",
+            "sourceColumn": "store_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "store_id",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "92b82705-d03a-4c4d-adbf-7de3aed06605",
+            "sourceColumn": "store_id",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "name",
+            "dataType": "string",
+            "lineageTag": "5dc12f99-76b3-4689-bfba-cb6e03e34670",
+            "sourceColumn": "name",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "address_id",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "30bafa1e-46a4-4d9b-87eb-716cba56aa22",
+            "sourceColumn": "address_id",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "city",
+            "dataType": "string",
+            "lineageTag": "1a04897e-40f0-4e49-97ac-7d7564832e11",
+            "sourceColumn": "city",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "province_code",
+            "dataType": "string",
+            "lineageTag": "6662b5c9-af9a-46a5-9d9c-0c05e1e41557",
+            "sourceColumn": "province_code",
+            "summarizeBy": "none"
+          }
+        ],
+        "lineageTag": "816540b6-6577-4338-abb5-feff6854658d",
+        "partitions": [
+          {
+            "name": "dim_store",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                "    Archivo = RutaDW & \"\\dim_store.csv\",",
+                "    Origen = Csv.Document(File.Contents(Archivo), [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    Encabezados = Table.PromoteHeaders(Origen, [PromoteAllScalars=true]),",
+                "    Nulos = Table.ReplaceValue(Encabezados, \"\", null, Replacer.ReplaceValue, Table.ColumnNames(Encabezados)),",
+                "    Tipada = Table.TransformColumnTypes(Nulos, {{\"store_key\", Int64.Type}, {\"store_id\", Int64.Type}, {\"name\", type text}, {\"address_id\", Int64.Type}, {\"city\", type text}, {\"province_code\", type text}}, \"en-US\")",
+                "in",
+                "    Tipada"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "fact_sales_order",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ],
+        "columns": [
+          {
+            "name": "order_id",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "8f26cfc9-984a-4ea3-93f7-5a2aefcd4ba1",
+            "sourceColumn": "order_id",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "date_key",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "fd7684f7-28a2-4d5f-923a-05f9f231d0ff",
+            "sourceColumn": "date_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "channel_key",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "c2e9a858-6db1-4a7d-9adc-9d3d34822f4d",
+            "sourceColumn": "channel_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "customer_key",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "25e7a69f-7710-4c2b-8a99-43bc380751e4",
+            "sourceColumn": "customer_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "store_key",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "9bbf942a-fea3-4308-a474-ba62ea72b367",
+            "sourceColumn": "store_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "province_key",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "bfb46202-0f98-4694-9ad4-f30d0c7e381e",
+            "sourceColumn": "province_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "order_date",
+            "dataType": "dateTime",
+            "lineageTag": "a54ec590-4861-462d-bef7-9d46f136391a",
+            "sourceColumn": "order_date",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "status",
+            "dataType": "string",
+            "lineageTag": "9e606c62-36cb-465d-846b-a0dfb5d23a41",
+            "sourceColumn": "status",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "es_venta",
+            "dataType": "boolean",
+            "lineageTag": "a030e459-7387-461a-ae30-1e81cf63ac69",
+            "sourceColumn": "es_venta",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "subtotal",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "decimal",
+            "formatString": "\"$\" #,0.00;(\"$\" #,0.00);\"$\" 0.00",
+            "lineageTag": "b0726e50-9596-474e-9239-0e3728e0bdf5",
+            "sourceColumn": "subtotal",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "tax_amount",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "decimal",
+            "formatString": "\"$\" #,0.00;(\"$\" #,0.00);\"$\" 0.00",
+            "lineageTag": "c3f25ea0-8ebd-45d2-910c-8c7a857251c7",
+            "sourceColumn": "tax_amount",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "shipping_fee",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "decimal",
+            "formatString": "\"$\" #,0.00;(\"$\" #,0.00);\"$\" 0.00",
+            "lineageTag": "ca95e593-a886-4e59-826d-c66c001f49c8",
+            "sourceColumn": "shipping_fee",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "total_amount",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "decimal",
+            "formatString": "\"$\" #,0.00;(\"$\" #,0.00);\"$\" 0.00",
+            "lineageTag": "79ffc8c6-d16a-44b5-a288-ef811da7fd1a",
+            "sourceColumn": "total_amount",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "venta_neta",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "decimal",
+            "formatString": "\"$\" #,0.00;(\"$\" #,0.00);\"$\" 0.00",
+            "lineageTag": "003ee8f8-d9b2-4bfe-8c34-8281fcc39d7a",
+            "sourceColumn": "venta_neta",
+            "summarizeBy": "sum"
+          }
+        ],
+        "lineageTag": "a49fa5ff-6222-4e8f-88e3-a679ccb6f2eb",
+        "partitions": [
+          {
+            "name": "fact_sales_order",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                "    Archivo = RutaDW & \"\\fact_sales_order.csv\",",
+                "    Origen = Csv.Document(File.Contents(Archivo), [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    Encabezados = Table.PromoteHeaders(Origen, [PromoteAllScalars=true]),",
+                "    Nulos = Table.ReplaceValue(Encabezados, \"\", null, Replacer.ReplaceValue, Table.ColumnNames(Encabezados)),",
+                "    Tipada = Table.TransformColumnTypes(Nulos, {{\"order_id\", Int64.Type}, {\"date_key\", Int64.Type}, {\"channel_key\", Int64.Type}, {\"customer_key\", Int64.Type}, {\"store_key\", Int64.Type}, {\"province_key\", Int64.Type}, {\"order_date\", type datetime}, {\"status\", type text}, {\"es_venta\", type logical}, {\"subtotal\", Currency.Type}, {\"tax_amount\", Currency.Type}, {\"shipping_fee\", Currency.Type}, {\"total_amount\", Currency.Type}, {\"venta_neta\", Currency.Type}}, \"en-US\")",
+                "in",
+                "    Tipada"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "fact_sales_order_item",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ],
+        "columns": [
+          {
+            "name": "order_item_id",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "8d5d1b5a-d895-4711-8e40-2f343d90a30f",
+            "sourceColumn": "order_item_id",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "order_id",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "429f2690-5a2c-4f99-b083-a440d1149c52",
+            "sourceColumn": "order_id",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "date_key",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "1ffee789-2999-4111-aadf-1b175f71d7da",
+            "sourceColumn": "date_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "channel_key",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "48cf3bbc-bb70-4afa-b233-372441353a64",
+            "sourceColumn": "channel_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "customer_key",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "152faa16-8d9e-490f-acd9-782cc6bca3f0",
+            "sourceColumn": "customer_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "store_key",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "da3f1455-376f-4559-8d56-8c9453d857c6",
+            "sourceColumn": "store_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "province_key",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "6264cec4-d3ab-4834-b88e-9df87f269c70",
+            "sourceColumn": "province_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "product_key",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "2588ef55-32ba-4868-8c29-6f644f4ecd26",
+            "sourceColumn": "product_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "es_venta",
+            "dataType": "boolean",
+            "lineageTag": "c12d24ec-84c5-48b2-adf4-d715ccdcabdc",
+            "sourceColumn": "es_venta",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "quantity",
+            "dataType": "int64",
+            "lineageTag": "1a9de254-7ccd-417e-bf14-9b6e633b59c5",
+            "sourceColumn": "quantity",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "unit_price",
+            "dataType": "decimal",
+            "formatString": "\"$\" #,0.00;(\"$\" #,0.00);\"$\" 0.00",
+            "lineageTag": "5903e9fe-8461-4f80-b05a-24cf72d7caaa",
+            "sourceColumn": "unit_price",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "discount_amount",
+            "dataType": "decimal",
+            "formatString": "\"$\" #,0.00;(\"$\" #,0.00);\"$\" 0.00",
+            "lineageTag": "0398aff3-0319-4bec-8721-c6db65a573f5",
+            "sourceColumn": "discount_amount",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "line_total",
+            "dataType": "decimal",
+            "formatString": "\"$\" #,0.00;(\"$\" #,0.00);\"$\" 0.00",
+            "lineageTag": "3d890380-0e35-4261-8375-578bfb5e363c",
+            "sourceColumn": "line_total",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "venta_neta",
+            "dataType": "decimal",
+            "formatString": "\"$\" #,0.00;(\"$\" #,0.00);\"$\" 0.00",
+            "lineageTag": "61f59a8d-6db9-489a-82a9-2f252efbf207",
+            "sourceColumn": "venta_neta",
+            "summarizeBy": "none"
+          }
+        ],
+        "lineageTag": "65c39d03-e77e-41db-af5a-6520a7b5eeba",
+        "partitions": [
+          {
+            "name": "fact_sales_order_item",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                "    Archivo = RutaDW & \"\\fact_sales_order_item.csv\",",
+                "    Origen = Csv.Document(File.Contents(Archivo), [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    Encabezados = Table.PromoteHeaders(Origen, [PromoteAllScalars=true]),",
+                "    Nulos = Table.ReplaceValue(Encabezados, \"\", null, Replacer.ReplaceValue, Table.ColumnNames(Encabezados)),",
+                "    Tipada = Table.TransformColumnTypes(Nulos, {{\"order_item_id\", Int64.Type}, {\"order_id\", Int64.Type}, {\"date_key\", Int64.Type}, {\"channel_key\", Int64.Type}, {\"customer_key\", Int64.Type}, {\"store_key\", Int64.Type}, {\"province_key\", Int64.Type}, {\"product_key\", Int64.Type}, {\"es_venta\", type logical}, {\"quantity\", Int64.Type}, {\"unit_price\", Currency.Type}, {\"discount_amount\", Currency.Type}, {\"line_total\", Currency.Type}, {\"venta_neta\", Currency.Type}}, \"en-US\")",
+                "in",
+                "    Tipada"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "fact_web_session",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ],
+        "columns": [
+          {
+            "name": "session_id",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "80220cb8-3480-4207-a971-61951fe897dd",
+            "sourceColumn": "session_id",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "date_key",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "717f0a1d-84ad-4df6-a673-6307eff683b1",
+            "sourceColumn": "date_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "customer_key",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "0160c01c-afeb-4495-a962-77c93b34717b",
+            "sourceColumn": "customer_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "started_at",
+            "dataType": "dateTime",
+            "lineageTag": "81da64ac-64f7-42c7-931e-576632f3ae35",
+            "sourceColumn": "started_at",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "ended_at",
+            "dataType": "dateTime",
+            "lineageTag": "631d8a8c-7850-4b35-8892-da529c7ae61c",
+            "sourceColumn": "ended_at",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "source",
+            "dataType": "string",
+            "lineageTag": "27158e00-2d8a-450b-8262-47362e14da05",
+            "sourceColumn": "source",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "device",
+            "dataType": "string",
+            "lineageTag": "a063fab1-aee9-4c49-8624-167c2eb37961",
+            "sourceColumn": "device",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "duration_seconds",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "int64",
+            "lineageTag": "092222aa-631a-4cf7-a1f6-22e998283522",
+            "sourceColumn": "duration_seconds",
+            "summarizeBy": "sum"
+          }
+        ],
+        "lineageTag": "a8647740-0a16-4c33-a5b6-236c28e56e8f",
+        "partitions": [
+          {
+            "name": "fact_web_session",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                "    Archivo = RutaDW & \"\\fact_web_session.csv\",",
+                "    Origen = Csv.Document(File.Contents(Archivo), [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    Encabezados = Table.PromoteHeaders(Origen, [PromoteAllScalars=true]),",
+                "    Nulos = Table.ReplaceValue(Encabezados, \"\", null, Replacer.ReplaceValue, Table.ColumnNames(Encabezados)),",
+                "    Tipada = Table.TransformColumnTypes(Nulos, {{\"session_id\", Int64.Type}, {\"date_key\", Int64.Type}, {\"customer_key\", Int64.Type}, {\"started_at\", type datetime}, {\"ended_at\", type datetime}, {\"source\", type text}, {\"device\", type text}, {\"duration_seconds\", Int64.Type}}, \"en-US\")",
+                "in",
+                "    Tipada"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "fact_nps_response",
+        "annotations": [
+          {
+            "name": "PBI_ResultType",
+            "value": "Table"
+          }
+        ],
+        "columns": [
+          {
+            "name": "nps_id",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "bb8f0074-116b-4f80-a6ab-0d336068c6ab",
+            "sourceColumn": "nps_id",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "date_key",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "d06cfa3d-bca5-4dc0-888b-cae94899d104",
+            "sourceColumn": "date_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "channel_key",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "7ac679f6-2ba0-42f3-994c-582f3d0b48be",
+            "sourceColumn": "channel_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "customer_key",
+            "dataType": "int64",
+            "isHidden": true,
+            "lineageTag": "2e2d0318-c9b9-43a5-a699-74671cbe075d",
+            "sourceColumn": "customer_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "responded_at",
+            "dataType": "dateTime",
+            "lineageTag": "e9f7f97c-637d-4f1f-a449-087066c44e9a",
+            "sourceColumn": "responded_at",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "score",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "int64",
+            "lineageTag": "d8f9eb4a-a74a-4bda-a11a-33485a405871",
+            "sourceColumn": "score",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "comment",
+            "dataType": "string",
+            "lineageTag": "6f99be03-23fe-4822-bb9b-79c6b94c4e62",
+            "sourceColumn": "comment",
+            "summarizeBy": "none"
+          }
+        ],
+        "lineageTag": "5e4d1bf8-1864-42c0-a8fb-e1b8ad59dfe0",
+        "partitions": [
+          {
+            "name": "fact_nps_response",
+            "mode": "import",
+            "source": {
+              "expression": [
+                "let",
+                "    Archivo = RutaDW & \"\\fact_nps_response.csv\",",
+                "    Origen = Csv.Document(File.Contents(Archivo), [Delimiter=\",\", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),",
+                "    Encabezados = Table.PromoteHeaders(Origen, [PromoteAllScalars=true]),",
+                "    Nulos = Table.ReplaceValue(Encabezados, \"\", null, Replacer.ReplaceValue, Table.ColumnNames(Encabezados)),",
+                "    Tipada = Table.TransformColumnTypes(Nulos, {{\"nps_id\", Int64.Type}, {\"date_key\", Int64.Type}, {\"channel_key\", Int64.Type}, {\"customer_key\", Int64.Type}, {\"responded_at\", type datetime}, {\"score\", Int64.Type}, {\"comment\", type text}}, \"en-US\")",
+                "in",
+                "    Tipada"
+              ],
+              "type": "m"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
