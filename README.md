@@ -27,6 +27,8 @@ powerbi/            importación parametrizada, medidas y guía del dashboard
 
 > ⚠️ **No modifiques los archivos de `raw/`.** Son los datos de origen. Tus consultas SQL los leen y el resultado queda en `dw/`.
 
+**Extensión cloud opcional:** el [roadmap BigQuery](ROADMAP_BIGQUERY.md) y la [guía de configuración](cloud/README.md) describen la carga histórica con GitHub Actions y dbt. El circuito local de esta práctica sigue funcionando sin cuenta de Google Cloud.
+
 ## Los datos en un minuto
 
 - Son una **foto del sistema de ventas** de EcoBottle, tomada el **30/09/2025 a las 23:59:59**.

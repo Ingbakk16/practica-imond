@@ -69,7 +69,7 @@ Las franquicias publicadas de BigQuery incluyen 10 GiB de almacenamiento y 1 TiB
 - [x] Configurar logs y resúmenes de controles como artifacts de diagnóstico; no guardar datos generados mediante commits automáticos.
 - [ ] Confirmar una ejecución exitosa en GitHub Actions y la descarga del artifact `validation-logs`.
 
-**Estado:** workflow implementado en [`.github/workflows/validate.yml`](.github/workflows/validate.yml), validado con `actionlint`. Los comandos de validación, construcción y auditoría pasaron localmente en una copia temporal con Python 3.12 y DuckDB 1.5.5, sin modificar los CSV de `raw/` ni las exportaciones locales de `dw/`. Se verificó que la captura de logs conserva el código de error de un comando fallido. Falta la ejecución alojada en GitHub; ver instrucciones en [`WORKFLOW.md`](WORKFLOW.md#10-validación-automática-en-github-actions).
+**Estado:** workflow implementado en [`.github/workflows/validate.yml`](.github/workflows/validate.yml), validado con `actionlint`. Los comandos de validación, construcción y auditoría pasaron localmente en una copia temporal con Python 3.12 y DuckDB 1.5.5, sin modificar los CSV de `raw/` ni las exportaciones locales de `dw/`. Se verificó que la captura de logs conserva el código de error de un comando fallido. La [ejecución alojada en GitHub](https://github.com/Ingbakk16/practica-imond/actions/runs/41140959822) terminó exitosamente y publicó `validation-logs`; falta confirmar su descarga por el usuario. Ver [`WORKFLOW.md`](WORKFLOW.md#10-validación-automática-en-github-actions).
 
 **Criterio de cierre:** la construcción y los controles existentes pasan en un runner limpio, sin modificar las fuentes históricas.
 
@@ -77,14 +77,18 @@ Las franquicias publicadas de BigQuery incluyen 10 GiB de almacenamiento y 1 TiB
 
 **Objetivo:** reproducir el warehouse actual en BigQuery antes de cambiar sus datos.
 
-- [ ] Crear los datasets y permisos mínimos. Autenticar Actions con OIDC / Workload Identity Federation, evitando claves privadas de Google almacenadas en GitHub.
-- [ ] Generar la base histórica en una carpeta temporal con el generador original y validarla. Implementar su carga manual única con esquemas explícitos y protección contra duplicados al repetirla.
-- [ ] Crear el proyecto dbt con `dbt-bigquery`: sources, staging, dimensiones y hechos basados en los SQL actuales.
-- [ ] Adaptar funciones y tipos de DuckDB a BigQuery y conservar nombres de tablas/columnas cuando sea posible para reutilizar el reporte.
-- [ ] Sustituir claves basadas en `ROW_NUMBER()` por una estrategia estable y documentada; conservar las claves naturales para trazabilidad.
-- [ ] Extender `dim_date` hasta la fecha procesada y permitir que siga creciendo.
-- [ ] Agregar tests de unicidad, nulos, relaciones, estados válidos, importes, conciliación de ítems y rango de NPS. BigQuery no aplica las FK como DuckDB: los tests deben controlar esas relaciones.
-- [ ] Comparar filas y KPIs históricos con DuckDB y los documentos de validación.
+- [x] Preparar el workflow manual y la guía de permisos OIDC / Workload Identity Federation, sin claves privadas de Google almacenadas en GitHub.
+- [ ] Configurar realmente el proyecto GCP, los datasets, permisos y variables de GitHub, y verificar autenticación cloud.
+- [x] Implementar generación temporal y validación de la base histórica, y su carga manual única con esquemas explícitos y protección contra duplicados.
+- [x] Crear el proyecto dbt con `dbt-bigquery`: sources, staging, dimensiones y hechos basados en los SQL actuales.
+- [x] Adaptar funciones y tipos de DuckDB a BigQuery, conservando los nombres de tablas/columnas del reporte.
+- [x] Usar IDs numéricos de origen como claves estables en lugar de `ROW_NUMBER()`, conservando claves naturales y filas `-1`.
+- [x] Extender `dim_date` hasta la última fecha de actividad de pedidos, sesiones y respuestas.
+- [x] Agregar tests de unicidad, nulos, relaciones, estados válidos, importes, conciliación de ítems y rango de NPS. BigQuery no aplica las FK como DuckDB: los tests controlan esas relaciones.
+- [x] Implementar la conciliación de diez conteos de tablas y KPIs históricos mensuales contra DuckDB.
+- [ ] Ejecutar `dbt build` y la conciliación en BigQuery; repetir el workflow y confirmar que la carga se omite sin duplicados.
+
+**Estado:** código y configuración en [`cloud/`](cloud/README.md), [`dbt/`](dbt/) y [`.github/workflows/bigquery.yml`](.github/workflows/bigquery.yml). Las comprobaciones locales incluyen tests offline del loader, `dbt parse` (21 modelos y 73 tests), `actionlint` y ejecución de los modelos y cinco tests SQL de negocio traducidos a DuckDB. Los resultados traducidos coinciden con los conteos y KPIs de la base histórica de referencia. Esa comprobación local no sustituye ejecutar los modelos en BigQuery. La configuración del proyecto y la aceptación cloud siguen pendientes: todavía no se proporcionó el project ID ni se verificaron permisos GCP.
 
 **Criterio de cierre:** un workflow manual carga el histórico y ejecuta `dbt build`; los resultados concilian con la práctica original.
 

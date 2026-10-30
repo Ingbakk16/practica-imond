@@ -213,3 +213,9 @@ __marimo__/
 # Cachés y configuración local de Power BI Projects
 **/.pbi/
 powerbi/.build/
+
+# dbt outputs and temporary Google authentication files
+dbt/logs/
+dbt/dbt_packages/
+gha-creds-*.json
+.venv-cloud/

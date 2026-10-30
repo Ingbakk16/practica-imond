@@ -195,3 +195,9 @@ Los comandos guardan logs sin ocultar sus códigos de error: si falla un control
 Para lanzarlo manualmente, abrir **Actions → Validate historical pipeline → Run workflow** y seleccionar la rama. GitHub solo ofrece el botón cuando el workflow también existe en la rama predeterminada; antes de integrarlo, el push a `feature/big-query` y los pull requests permiten probarlo.
 
 El resumen de la ejecución muestra el resultado de cada control. Los logs y una copia del resumen se publican como artifact **validation-logs**, con retención de siete días, también si fallan las validaciones. Una cancelación puede impedir la publicación de diagnósticos. No se publica la base completa ni se cambia el circuito local de la práctica.
+
+## 11. Histórico cloud en BigQuery (opcional)
+
+La extensión de fase 2 usa [`.github/workflows/bigquery.yml`](.github/workflows/bigquery.yml), de ejecución exclusivamente manual. Genera una base temporal con el generador original, carga las fuentes una sola vez, construye el modelo con dbt y lo concilia con DuckDB. No reemplaza los pasos locales anteriores ni agrega credenciales al CI de pull requests.
+
+La configuración del proyecto GCP, datasets, permisos OIDC, variables de GitHub y reintentos se detalla en [`cloud/README.md`](cloud/README.md). Las dependencias están separadas en `cloud/requirements.txt`; los modelos cloud están en `dbt/`. Antes de ejecutar se debe confirmar la vinculación al crédito de prueba y configurar controles de consumo.

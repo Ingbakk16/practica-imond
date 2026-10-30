@@ -1,0 +1,157 @@
+version: 2
+models:
+  - name: dim_date
+    description: Una fila por fecha de actividad, desde el inicio de la práctica.
+    columns:
+      - name: date_key
+        data_tests: [unique, not_null]
+      - name: date_value
+        data_tests: [unique, not_null]
+  - name: dim_channel
+    columns:
+      - name: channel_key
+        data_tests: [unique, not_null]
+      - name: channel_id
+        data_tests: [unique, not_null]
+  - name: dim_province
+    columns:
+      - name: province_key
+        data_tests: [unique, not_null]
+      - name: province_id
+        data_tests: [unique, not_null]
+  - name: dim_product
+    columns:
+      - name: product_key
+        data_tests: [unique, not_null]
+      - name: product_id
+        data_tests: [unique, not_null]
+  - name: dim_customer
+    columns:
+      - name: customer_key
+        data_tests: [unique, not_null]
+      - name: customer_id
+        data_tests: [unique]
+  - name: dim_store
+    columns:
+      - name: store_key
+        data_tests: [unique, not_null]
+      - name: store_id
+        data_tests: [unique]
+  - name: fact_sales_order
+    description: Un pedido; venta_neta incluye IVA y envío solo para PAID/FULFILLED.
+    columns:
+      - name: order_id
+        data_tests: [unique, not_null]
+      - name: status
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [CREATED, PAID, FULFILLED, CANCELLED, REFUNDED]
+      - name: date_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments: {to: "ref('dim_date')", field: date_key}
+      - name: channel_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments: {to: "ref('dim_channel')", field: channel_key}
+      - name: customer_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments: {to: "ref('dim_customer')", field: customer_key}
+      - name: store_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments: {to: "ref('dim_store')", field: store_key}
+      - name: province_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments: {to: "ref('dim_province')", field: province_key}
+  - name: fact_sales_order_item
+    description: Una línea por producto/pedido; importes sin IVA ni envío.
+    columns:
+      - name: order_item_id
+        data_tests: [unique, not_null]
+      - name: order_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments: {to: "ref('fact_sales_order')", field: order_id}
+      - name: date_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments: {to: "ref('dim_date')", field: date_key}
+      - name: channel_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments: {to: "ref('dim_channel')", field: channel_key}
+      - name: customer_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments: {to: "ref('dim_customer')", field: customer_key}
+      - name: store_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments: {to: "ref('dim_store')", field: store_key}
+      - name: province_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments: {to: "ref('dim_province')", field: province_key}
+      - name: product_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments: {to: "ref('dim_product')", field: product_key}
+  - name: fact_web_session
+    description: Una sesión; los clientes anónimos usan -1 y el cierre puede ser NULL.
+    columns:
+      - name: session_id
+        data_tests: [unique, not_null]
+      - name: date_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments: {to: "ref('dim_date')", field: date_key}
+      - name: customer_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments: {to: "ref('dim_customer')", field: customer_key}
+  - name: fact_nps_response
+    description: Una respuesta por fecha de respuesta, sin atribuirla a un pedido.
+    columns:
+      - name: nps_id
+        data_tests: [unique, not_null]
+      - name: score
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+                quote: false
+      - name: date_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments: {to: "ref('dim_date')", field: date_key}
+      - name: channel_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments: {to: "ref('dim_channel')", field: channel_key}
+      - name: customer_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments: {to: "ref('dim_customer')", field: customer_key}

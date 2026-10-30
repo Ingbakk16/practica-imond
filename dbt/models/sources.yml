@@ -1,0 +1,19 @@
+version: 2
+sources:
+  - name: raw
+    database: "{{ env_var('GCP_PROJECT_ID') }}"
+    schema: ecobottle_raw
+    tables:
+      - name: address
+      - name: channel
+      - name: customer
+      - name: nps_response
+      - name: payment
+      - name: product
+      - name: product_category
+      - name: province
+      - name: sales_order
+      - name: sales_order_item
+      - name: shipment
+      - name: store
+      - name: web_session
