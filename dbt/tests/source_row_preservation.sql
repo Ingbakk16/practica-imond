@@ -6,6 +6,7 @@
     ('fact_nps_response', 'stg_nps_response')
 ] %}
 select '{{ fact }}' as issue
+from (select 1) as singleton
 where (select count(*) from {{ ref(fact) }}) != (select count(*) from {{ ref(source_name) }})
 {% if not loop.last %}union all{% endif %}
 {% endfor %}
