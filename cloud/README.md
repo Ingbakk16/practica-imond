@@ -1,6 +1,6 @@
 # Histórico en BigQuery con dbt (fase 2)
 
-Este circuito agrega una ejecución cloud manual sin reemplazar la práctica local. Genera la base original con semilla 42, valida los CSV, carga las 13 fuentes una sola vez y construye las seis dimensiones y cuatro hechos con dbt Core. No genera días nuevos ni actualiza Power BI todavía.
+Este circuito agrega una ejecución cloud manual sin reemplazar la práctica local. Genera la base original con semilla 42, valida los CSV, carga las 13 fuentes una sola vez y construye las seis dimensiones y cuatro hechos con dbt Core. Puede cargar opcionalmente un lote diario por ejecución manual (ver fase 3 abajo); no actualiza Power BI todavía.
 
 ## 1. Preparar el proyecto una sola vez
 
@@ -143,3 +143,33 @@ Para conciliar: `python cloud/reconcile.py --database /ruta/a/warehouse.duckdb`,
 - [ ] Ninguna fuente local ni reporte Power BI fue modificado.
 
 Hasta ejecutar los controles cloud, la fase está implementada pero no verificada de punta a punta. Ver [`ROADMAP_BIGQUERY.md`](../ROADMAP_BIGQUERY.md).
+
+## Fase 3: un lote diario manual (sin schedule)
+
+**Primero cerrar la aceptación de la fase 2.** La ejecución manual de GitHub requiere que el workflow exista en la rama predeterminada; mientras siga solo en `feature/big-query`, no aparecerá el botón «Run workflow». Un PR sin fusionar ejecuta el workflow de validación local, **no** prueba la autenticación OIDC de BigQuery. Para probar cloud antes de fusionar, usar credenciales locales autorizadas y los comandos siguientes; esto puede consumir crédito GCP.
+
+El generador original y los 13 CSV de `raw/` no cambian. Cada día usa fecha Argentina, semilla 42 y 100 pedidos por defecto. En días de apertura genera ventas presenciales completas; los domingos y feriados fijos del generador original (01/01, 01/05, 25/12), tiendas cerradas, genera pedidos online `PAID`, envío `READY` y una sesión web por pedido. No inventa entregas ni encuestas. En ambas variantes crea clientes y direcciones nuevos; `shipment.csv` y `web_session.csv` diarios están vacíos los días presenciales. La fecha elegida es explícita, desde el 01/10/2025 en adelante; el salto desde el histórico no se rellena automáticamente. Otros feriados móviles no se modelan en esta demo.
+
+Comprobación **sin cloud** (usar un directorio nuevo cada vez):
+
+```bash
+python -m unittest discover -s generator/tests -v
+python generator/generate_daily.py --date 2026-11-01 --seed 42 --orders 100 --out /tmp/ecobottle-day
+python generator/validate_daily.py --dir /tmp/ecobottle-day
+```
+
+Para generar hasta 31 días consecutivos de manera independiente (la misma fecha y semilla producen exactamente el mismo lote, se ejecute sola o dentro del rango): `python generator/generate_daily.py --start 2026-11-01 --end 2026-11-07 --out /tmp/ecobottle-week`. Validar cada subcarpeta con `generator/validate_daily.py`; para cargar todas, `python cloud/load_daily.py --range --dir /tmp/ecobottle-week`. Si falla una fecha, repetir el mismo comando omite las completas y reintenta solo la incompleta. Después, ejecutar `dbt build` y conciliar cada subcarpeta. No hay schedule ni carga automática de días faltantes.
+
+Con el histórico ya cargado, los datasets provisionados y las variables GCP de la sección 6 configuradas, una carga **manual** y su comprobación usan:
+
+```bash
+python cloud/setup_daily.py
+python cloud/load_daily.py --dir /tmp/ecobottle-day
+dbt build --project-dir dbt --profiles-dir dbt
+python cloud/reconcile.py --database /ruta/al/warehouse.duckdb
+python cloud/reconcile_daily.py --dir /tmp/ecobottle-day
+```
+
+`cloud/setup_daily.py` crea tablas vacías antes del primer `dbt build`, incluso si solo se quiere reconstruir el histórico. La carga diaria se niega a comenzar sin bootstrap histórico completo, mantiene registros nuevos en `ecobottle_raw.daily_*` (no trunca las fuentes históricas), e identifica cada día con un manifiesto y fingerprint en `ecobottle_ops.daily_batches`. Solo los lotes `complete` son visibles para dbt. Repetir un lote completo con la misma entrada no escribe; cambiar semilla, versión o contenido para una fecha existente se rechaza. Repetir uno `loading` reemplaza únicamente sus propias filas; las tablas analíticas se reconstruyen con dbt después. Ejecutar **un solo escritor cloud a la vez**: el workflow serializa sus ejecuciones, pero los comandos locales simultáneos no están coordinados.
+
+El workflow `Build historical BigQuery warehouse` admite opcionalmente `daily_date`, `daily_seed` y `daily_orders`. Con la fecha vacía solo ejecuta el histórico, como en fase 2. Con fecha, valida primero el histórico, luego genera y carga ese día, ejecuta dbt nuevamente y concilia tanto el histórico como el lote. No hay ejecución programada ni refresh Power BI (fase 4/5). Un fallo después de marcar `complete`, pero antes de dbt, se recupera repitiendo la misma fecha y semilla: la carga se omite y dbt se reconstruye. No refrescar Power BI tras fallos de dbt.

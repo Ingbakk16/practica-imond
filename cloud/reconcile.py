@@ -15,10 +15,25 @@ TABLES = (
 )
 
 
-def queries(table):
+def queries(table, historical=False):
     """Portable SQL; compare natural labels rather than regenerated surrogate keys."""
     month = "substr(cast(f.date_key as string), 1, 6)"
-    counts = " union all ".join(f"select '{name}' as name, count(*) as rows from {table(name)}" for name in TABLES)
+    def scope(name):
+        if not historical:
+            return ""
+        if name == "dim_date":
+            return " where date_key <= 20250930"
+        if name == "dim_customer":
+            return " where customer_key < 1000000000"
+        if name.startswith("fact_"):
+            key = {"fact_sales_order": "order_id", "fact_sales_order_item": "order_item_id",
+                   "fact_web_session": "session_id", "fact_nps_response": "nps_id"}[name]
+            return f" where {key} < 1000000000"
+        return ""
+    counts = " union all ".join(f"select '{name}' as name, count(*) as rows from {table(name)}{scope(name)}" for name in TABLES)
+    sales_scope = "where f.order_id < 1000000000" if historical else ""
+    items_scope = "where f.order_item_id < 1000000000" if historical else ""
+    sessions_scope = "where f.session_id < 1000000000" if historical else ""
     return {
         "table_counts": counts + " order by name",
         "monthly_sales": f"""
@@ -28,12 +43,14 @@ def queries(table):
                 count(distinct case when f.es_venta then f.customer_key end) as buyers
             from {table('fact_sales_order')} as f
             join {table('dim_channel')} as c on c.channel_key = f.channel_key
+            {sales_scope}
             group by month, c.code order by month, c.code""",
         "monthly_products": f"""
             select {month} as month, p.sku, sum(f.venta_neta) as revenue,
                 sum(case when f.es_venta then f.quantity else 0 end) as units
             from {table('fact_sales_order_item')} as f
             join {table('dim_product')} as p on p.product_key = f.product_key
+            {items_scope}
             group by month, p.sku order by month, p.sku""",
         "monthly_sessions": f"""
             select {month} as month, f.source, f.device, count(*) as sessions,
@@ -42,6 +59,7 @@ def queries(table):
                 count(f.duration_seconds) as closed_sessions,
                 sum(f.duration_seconds) as duration_seconds
             from {table('fact_web_session')} as f
+            {sessions_scope}
             group by month, f.source, f.device order by month, f.source, f.device""",
         "monthly_nps": f"""
             select {month} as month, c.code, count(*) as responses,
@@ -62,7 +80,7 @@ def main():
     config = Config.from_env()
     client = config.client()
     local = queries(lambda name: f'main."{name}"')
-    remote = queries(lambda name: f"`{config.project}.ecobottle_analytics.{name}`")
+    remote = queries(lambda name: f"`{config.project}.ecobottle_analytics.{name}`", historical=True)
     failures = []
     with duckdb.connect(str(args.database), read_only=True) as con:
         for name, sql in remote.items():

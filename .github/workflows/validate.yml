@@ -14,7 +14,7 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     defaults:
       run:
         shell: bash
@@ -57,6 +57,30 @@ jobs:
         run: |
           python generator/validate_raw.py 2>&1 | tee "$LOG_DIR/source-validation.log"
 
+      - name: Test deterministic daily batches offline
+        id: daily_tests
+        run: |
+          python -m unittest discover -s generator/tests -v 2>&1 | tee "$LOG_DIR/daily-tests.log"
+
+      - name: Install cloud dependencies for offline checks
+        id: cloud_install
+        run: |
+          python -m pip install -r cloud/requirements.txt 2>&1 | tee "$LOG_DIR/cloud-install.log"
+
+      - name: Test cloud loaders without credentials
+        id: cloud_tests
+        run: |
+          python -m unittest discover -s cloud/tests -v 2>&1 | tee "$LOG_DIR/cloud-tests.log"
+
+      - name: Parse dbt models without connecting to BigQuery
+        id: dbt_parse
+        env:
+          GCP_PROJECT_ID: demo-project
+          BQ_LOCATION: US
+          DBT_SEND_ANONYMOUS_USAGE_STATS: "false"
+        run: |
+          dbt parse --project-dir dbt --profiles-dir dbt 2>&1 | tee "$LOG_DIR/dbt-parse.log"
+
       - name: Build historical warehouse
         id: build
         run: |
@@ -89,6 +113,10 @@ jobs:
           GENERATE: ${{ steps.generate.outcome }}
           GENERATED_VALIDATION: ${{ steps.generated_validation.outcome }}
           SOURCE_VALIDATION: ${{ steps.source_validation.outcome }}
+          DAILY_TESTS: ${{ steps.daily_tests.outcome }}
+          CLOUD_INSTALL: ${{ steps.cloud_install.outcome }}
+          CLOUD_TESTS: ${{ steps.cloud_tests.outcome }}
+          DBT_PARSE: ${{ steps.dbt_parse.outcome }}
           BUILD: ${{ steps.build.outcome }}
           AUDIT: ${{ steps.audit.outcome }}
           SOURCE_PRESERVATION: ${{ steps.source_preservation.outcome }}
@@ -103,6 +131,10 @@ jobs:
           | Temporary generation (seed 42) | $GENERATE |
           | Generated data validation | $GENERATED_VALIDATION |
           | Committed source validation | $SOURCE_VALIDATION |
+          | Daily generation tests (offline) | $DAILY_TESTS |
+          | Cloud dependency installation | $CLOUD_INSTALL |
+          | Cloud loader tests (offline) | $CLOUD_TESTS |
+          | dbt parse (offline) | $DBT_PARSE |
           | Warehouse build | $BUILD |
           | Warehouse and CSV audit | $AUDIT |
           | Source preservation | $SOURCE_PRESERVATION |

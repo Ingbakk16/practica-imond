@@ -96,16 +96,18 @@ Las franquicias publicadas de BigQuery incluyen 10 GiB de almacenamiento y 1 TiB
 
 **Objetivo:** agregar un lote diario pequeño y reproducible sin cambiar registros anteriores.
 
-- [ ] Agregar un generador diario con fecha, semilla y cantidad de pedidos explícitas (100 por defecto); reutilizar catálogos y reglas del original cuando sea práctico.
-- [ ] Usar IDs deterministas derivados de fecha y posición, en un rango separado del histórico y compatible con los tipos existentes. No mantener contadores ni un estado mutable entre runners.
-- [ ] Crear pedidos nuevos con sus clientes/direcciones, ítems y pagos necesarios. Usar operaciones ya finalizadas al corte del lote, sin actualizaciones futuras; las ventas presenciales con pago inmediato permiten empezar sin simular logística.
-- [ ] Si se agregan ventas online o sesiones, respetar sus relaciones y tiempos. No inventar encuestas NPS ni entregas con fechas incoherentes para completar todas las tablas: el histórico ya alimenta las cinco páginas.
-- [ ] Mantener intactos todos los registros anteriores, incluidos los pedidos históricos pendientes. No implementar eventos pendientes, devoluciones posteriores ni cambios de estado.
-- [ ] Identificar cada lote por fecha, semilla y versión del generador, con cantidades por tabla. Repetir la misma entrada debe producir la misma salida; un cambio de versión no debe agregar otro lote para una fecha ya cargada.
-- [ ] Implementar carga por lote sin duplicados. Ante una carga parcial, reemplazar o limpiar únicamente los registros de ese lote incompleto antes de repetirlo; nunca volver a anexarlos a ciegas.
-- [ ] Marcar un lote completo solo cuando sus tablas hayan sido cargadas y validadas. dbt debe leer únicamente lotes completos. Guardar ese registro en BigQuery, no depender de cache o artifacts de Actions.
-- [ ] Adaptar los controles del generador a fechas variables sin cambiar las expectativas del dataset histórico.
-- [ ] Probar repetición del mismo día, siete días consecutivos y ejecución equivalente por rango; comprobar que los registros históricos no cambian.
+- [x] Agregar un generador diario con fecha, semilla y cantidad de pedidos explícitas (100 por defecto); reutilizar catálogos y reglas del original cuando sea práctico.
+- [x] Usar IDs deterministas derivados de fecha y posición, en un rango separado del histórico y compatible con los tipos existentes. No mantener contadores ni un estado mutable entre runners.
+- [x] Crear pedidos nuevos con sus clientes/direcciones, ítems y pagos necesarios. Usar operaciones ya finalizadas al corte del lote, sin actualizaciones futuras; las ventas presenciales con pago inmediato permiten empezar sin simular logística.
+- [x] Si se agregan ventas online o sesiones, respetar sus relaciones y tiempos. No inventar encuestas NPS ni entregas con fechas incoherentes para completar todas las tablas: el histórico ya alimenta las cinco páginas.
+- [x] Mantener intactos todos los registros anteriores, incluidos los pedidos históricos pendientes. No implementar eventos pendientes, devoluciones posteriores ni cambios de estado.
+- [x] Identificar cada lote por fecha, semilla y versión del generador, con cantidades por tabla. Repetir la misma entrada debe producir la misma salida; un cambio de versión no debe agregar otro lote para una fecha ya cargada.
+- [x] Implementar carga por lote sin duplicados. Ante una carga parcial, reemplazar o limpiar únicamente los registros de ese lote incompleto antes de repetirlo; nunca volver a anexarlos a ciegas.
+- [x] Marcar un lote completo solo cuando sus tablas hayan sido cargadas y validadas. dbt debe leer únicamente lotes completos. Guardar ese registro en BigQuery, no depender de cache o artifacts de Actions.
+- [x] Adaptar los controles del generador a fechas variables sin cambiar las expectativas del dataset histórico.
+- [ ] Probar repetición del mismo día, siete días consecutivos y ejecución equivalente por rango en BigQuery; comprobar que los registros históricos no cambian. Los tests offline de repetición, siete días y equivalencia por rango ya pasan.
+
+**Estado:** código de fase 3 implementado en [`generator/`](generator/), [`cloud/`](cloud/README.md), [`dbt/`](dbt/) y el workflow manual cloud. El workflow de PR valida ahora generador, loader y `dbt parse` sin credenciales; todavía falta confirmar esa nueva versión en GitHub Actions. Los tests offline locales pasan; el cierre cloud sigue bloqueado por la aceptación pendiente de fase 2 y la ausencia del workflow cloud en la rama predeterminada. Ver [`cloud/README.md`](cloud/README.md#fase-3-un-lote-diario-manual-sin-schedule).
 
 **Criterio de cierre:** cada lote predeterminado agrega 100 pedidos; repetirlo no duplica registros; siete días juntos o por separado dan el mismo resultado y preservan el histórico.
 

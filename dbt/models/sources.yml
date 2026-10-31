@@ -17,3 +17,15 @@ sources:
       - name: shipment
       - name: store
       - name: web_session
+      - name: daily_address
+      - name: daily_customer
+      - name: daily_sales_order
+      - name: daily_sales_order_item
+      - name: daily_payment
+      - name: daily_shipment
+      - name: daily_web_session
+  - name: ops
+    database: "{{ env_var('GCP_PROJECT_ID') }}"
+    schema: ecobottle_ops
+    tables:
+      - name: daily_batches

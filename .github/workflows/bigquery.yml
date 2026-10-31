@@ -2,6 +2,19 @@ name: Build historical BigQuery warehouse
 
 on:
   workflow_dispatch:
+    inputs:
+      daily_date:
+        description: "Optional Argentina business date (YYYY-MM-DD); blank = historical only"
+        type: string
+        required: false
+      daily_seed:
+        description: "Daily generator seed"
+        type: number
+        default: 42
+      daily_orders:
+        description: "Orders for the daily batch"
+        type: number
+        default: 100
 
 permissions:
   contents: read
@@ -61,6 +74,7 @@ jobs:
       - name: Test bootstrap safeguards
         run: |
           python -m unittest discover -s cloud/tests -v 2>&1 | tee "$LOG_DIR/unit-tests.log"
+          python -m unittest discover -s generator/tests -v 2>&1 | tee "$LOG_DIR/daily-tests.log"
 
       - name: Generate and validate historical base
         run: |
@@ -94,6 +108,10 @@ jobs:
         run: |
           python cloud/load_historical.py --dir "$GENERATED_RAW" 2>&1 | tee "$LOG_DIR/load.log"
 
+      - name: Prepare daily schema without changing existing rows
+        run: |
+          python cloud/setup_daily.py 2>&1 | tee "$LOG_DIR/daily-schema.log"
+
       - name: Build and test BigQuery models
         working-directory: dbt
         run: |
@@ -102,6 +120,30 @@ jobs:
       - name: Reconcile BigQuery with DuckDB
         run: |
           python cloud/reconcile.py --database warehouse.duckdb 2>&1 | tee "$LOG_DIR/reconciliation.log"
+
+      - name: Generate and validate optional daily batch
+        if: ${{ inputs.daily_date != '' }}
+        env:
+          DAILY_DATE: ${{ inputs.daily_date }}
+          DAILY_SEED: ${{ inputs.daily_seed }}
+          DAILY_ORDERS: ${{ inputs.daily_orders }}
+        run: |
+          echo "DAILY_RAW=$RUNNER_TEMP/daily-raw" >> "$GITHUB_ENV"
+          python generator/generate_daily.py --date "$DAILY_DATE" --seed "$DAILY_SEED" --orders "$DAILY_ORDERS" --out "$RUNNER_TEMP/daily-raw" 2>&1 | tee "$LOG_DIR/daily-generate.log"
+          python generator/validate_daily.py --dir "$RUNNER_TEMP/daily-raw" 2>&1 | tee "$LOG_DIR/daily-validation.log"
+
+      - name: Load optional daily batch
+        if: ${{ inputs.daily_date != '' }}
+        run: |
+          python cloud/load_daily.py --dir "$DAILY_RAW" 2>&1 | tee "$LOG_DIR/daily-load.log"
+
+      - name: Rebuild and reconcile after daily load
+        if: ${{ inputs.daily_date != '' }}
+        working-directory: dbt
+        run: |
+          dbt build 2>&1 | tee "$LOG_DIR/daily-dbt-build.log"
+          python ../cloud/reconcile.py --database ../warehouse.duckdb 2>&1 | tee "$LOG_DIR/daily-historical-reconciliation.log"
+          python ../cloud/reconcile_daily.py --dir "$DAILY_RAW" 2>&1 | tee "$LOG_DIR/daily-reconciliation.log"
 
       - name: Verify source preservation
         if: ${{ always() && !cancelled() }}
@@ -123,7 +165,8 @@ jobs:
           Location: $BQ_LOCATION
 
           See bigquery-diagnostics for command logs and dbt results (7 days).
-          No daily generation or Power BI refresh is performed by this workflow.
+          Optional daily date: ${{ inputs.daily_date || 'none (historical only)' }}
+          No schedule or Power BI refresh is performed by this workflow.
           EOF
           cat "$RUNNER_TEMP/bigquery-logs/summary.md" >> "$GITHUB_STEP_SUMMARY"
 
