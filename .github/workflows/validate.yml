@@ -1,0 +1,154 @@
+name: Validate historical pipeline
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - feature/big-query
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        shell: bash
+    env:
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Set temporary paths
+        run: |
+          echo "LOG_DIR=$RUNNER_TEMP/validation-logs" >> "$GITHUB_ENV"
+          echo "GENERATED_RAW=$RUNNER_TEMP/generated-raw" >> "$GITHUB_ENV"
+
+      - name: Install dependencies
+        id: install
+        run: |
+          mkdir -p "$LOG_DIR"
+          python -m pip install -r requirements.txt 2>&1 | tee "$LOG_DIR/install.log"
+
+      - name: Generate temporary historical data
+        id: generate
+        run: |
+          python generator/generate_raw.py --seed 42 --out "$GENERATED_RAW" 2>&1 | tee "$LOG_DIR/generate.log"
+
+      - name: Validate generated data
+        id: generated_validation
+        run: |
+          python generator/validate_raw.py --dir "$GENERATED_RAW" 2>&1 | tee "$LOG_DIR/generated-validation.log"
+
+      - name: Validate committed source data
+        id: source_validation
+        run: |
+          python generator/validate_raw.py 2>&1 | tee "$LOG_DIR/source-validation.log"
+
+      - name: Test deterministic daily batches offline
+        id: daily_tests
+        run: |
+          python -m unittest discover -s generator/tests -v 2>&1 | tee "$LOG_DIR/daily-tests.log"
+
+      - name: Install cloud dependencies for offline checks
+        id: cloud_install
+        run: |
+          python -m pip install -r cloud/requirements.txt 2>&1 | tee "$LOG_DIR/cloud-install.log"
+
+      - name: Test cloud loaders without credentials
+        id: cloud_tests
+        run: |
+          python -m unittest discover -s cloud/tests -v 2>&1 | tee "$LOG_DIR/cloud-tests.log"
+
+      - name: Parse dbt models without connecting to BigQuery
+        id: dbt_parse
+        env:
+          GCP_PROJECT_ID: demo-project
+          BQ_LOCATION: US
+          DBT_SEND_ANONYMOUS_USAGE_STATS: "false"
+        run: |
+          dbt parse --project-dir dbt --profiles-dir dbt 2>&1 | tee "$LOG_DIR/dbt-parse.log"
+
+      - name: Build historical warehouse
+        id: build
+        run: |
+          python run_sql.py 2>&1 | tee "$LOG_DIR/build.log"
+
+      - name: Audit warehouse and exports
+        id: audit
+        run: |
+          python validate_warehouse.py 2>&1 | tee "$LOG_DIR/audit.log"
+
+      - name: Verify source data is unchanged
+        id: source_preservation
+        if: ${{ always() && !cancelled() }}
+        run: |
+          mkdir -p "$LOG_DIR"
+          {
+            git diff --exit-code HEAD -- raw/
+            untracked=$(git ls-files --others --exclude-standard -- raw/)
+            if [[ -n "$untracked" ]]; then
+              printf 'Unexpected source files:\n%s\n' "$untracked"
+              exit 1
+            fi
+            echo "Source data is unchanged."
+          } 2>&1 | tee "$LOG_DIR/source-preservation.log"
+
+      - name: Write validation summary
+        if: ${{ always() && !cancelled() }}
+        env:
+          INSTALL: ${{ steps.install.outcome }}
+          GENERATE: ${{ steps.generate.outcome }}
+          GENERATED_VALIDATION: ${{ steps.generated_validation.outcome }}
+          SOURCE_VALIDATION: ${{ steps.source_validation.outcome }}
+          DAILY_TESTS: ${{ steps.daily_tests.outcome }}
+          CLOUD_INSTALL: ${{ steps.cloud_install.outcome }}
+          CLOUD_TESTS: ${{ steps.cloud_tests.outcome }}
+          DBT_PARSE: ${{ steps.dbt_parse.outcome }}
+          BUILD: ${{ steps.build.outcome }}
+          AUDIT: ${{ steps.audit.outcome }}
+          SOURCE_PRESERVATION: ${{ steps.source_preservation.outcome }}
+        run: |
+          mkdir -p "$LOG_DIR"
+          cat > "$LOG_DIR/summary.md" <<EOF
+          ## Historical pipeline validation
+
+          | Check | Result |
+          |---|---|
+          | Dependencies | $INSTALL |
+          | Temporary generation (seed 42) | $GENERATE |
+          | Generated data validation | $GENERATED_VALIDATION |
+          | Committed source validation | $SOURCE_VALIDATION |
+          | Daily generation tests (offline) | $DAILY_TESTS |
+          | Cloud dependency installation | $CLOUD_INSTALL |
+          | Cloud loader tests (offline) | $CLOUD_TESTS |
+          | dbt parse (offline) | $DBT_PARSE |
+          | Warehouse build | $BUILD |
+          | Warehouse and CSV audit | $AUDIT |
+          | Source preservation | $SOURCE_PRESERVATION |
+
+          Logs are available in the validation-logs artifact for 7 days.
+          No generated data is committed and no cloud credentials are required.
+          EOF
+          cat "$LOG_DIR/summary.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload validation logs
+        if: ${{ always() && !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: validation-logs
+          path: ${{ runner.temp }}/validation-logs/
+          retention-days: 7
+          if-no-files-found: warn

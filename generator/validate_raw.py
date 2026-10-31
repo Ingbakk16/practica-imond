@@ -91,7 +91,8 @@ def load(folder: Path) -> dict:
     return data
 
 
-def validate(d: dict, r: Report) -> None:
+def validate(d: dict, r: Report, snapshot: datetime = SNAPSHOT, end=None) -> None:
+    end = end or END
     by_id = {name: {row[pk]: row for row in d[name]} for name, pk in TABLES.items()}
     orders, items, pays, ships = d["sales_order"], d["sales_order_item"], d["payment"], d["shipment"]
     customers, addresses, sessions, nps = by_id["customer"], by_id["address"], d["web_session"], d["nps_response"]
@@ -204,10 +205,10 @@ def validate(d: dict, r: Report) -> None:
         ("customer", ["created_at"]), ("address", ["created_at"]), ("sales_order", ["order_date"]),
         ("payment", ["paid_at"]), ("shipment", ["shipped_at", "delivered_at"]),
         ("web_session", ["started_at", "ended_at"]), ("nps_response", ["responded_at"])]
-        for row in d[name] for col in cols if row[col] and ts(row[col]) > SNAPSHOT]
-    r.check(f"Nada posterior al corte ({SNAPSHOT})", all_ts)
+        for row in d[name] for col in cols if row[col] and ts(row[col]) > snapshot]
+    r.check(f"Nada posterior al corte ({snapshot})", all_ts)
     r.check("Pedidos dentro del período",
-            [o["order_id"] for o in orders if not START_DT <= ts(o["order_date"]) <= SNAPSHOT or ts(o["order_date"]).date() > END])
+            [o["order_id"] for o in orders if not START_DT <= ts(o["order_date"]) <= snapshot or ts(o["order_date"]).date() > end])
     r.check("Pedido posterior al alta del cliente",
             [o["order_id"] for o in orders if ts(o["order_date"]) < ts(customers[o["customer_id"]]["created_at"])])
     r.check("Direcciones del pedido creadas antes del pedido",
@@ -254,7 +255,7 @@ def validate(d: dict, r: Report) -> None:
         last_order[o["customer_id"]] = max(last_order.get(o["customer_id"], ts(o["order_date"])), ts(o["order_date"]))
     r.check("Clientes inactivos sin compras en los últimos 90 días",
             [c for c, row in customers.items() if row["status"] == "I" and c in last_order
-             and last_order[c] > SNAPSHOT - timedelta(days=90)])
+              and last_order[c] > snapshot - timedelta(days=90)])
 
 
 def summary(d: dict) -> None:
@@ -298,10 +299,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--dir", type=Path, default=Path(__file__).resolve().parent.parent / "raw",
                         help="carpeta con los CSV (default: raw/)")
+    parser.add_argument("--snapshot", type=datetime.fromisoformat, default=SNAPSHOT,
+                        help="corte para validar una combinación de histórico y lotes diarios")
     args = parser.parse_args()
     data = load(args.dir)
     report = Report()
-    validate(data, report)
+    validate(data, report, snapshot=args.snapshot, end=args.snapshot.date())
     summary(data)
     if report.failures:
         print(f"\n{report.failures} reglas con fallas")

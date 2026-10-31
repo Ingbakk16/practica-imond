@@ -1,0 +1,12 @@
+name: ecobottle
+version: "1.0.0"
+config-version: 2
+profile: ecobottle
+model-paths: [models]
+test-paths: [tests]
+models:
+  ecobottle:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table

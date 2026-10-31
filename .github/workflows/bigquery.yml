@@ -1,0 +1,183 @@
+name: Build historical BigQuery warehouse
+
+on:
+  workflow_dispatch:
+    inputs:
+      daily_date:
+        description: "Optional Argentina business date (YYYY-MM-DD); blank = historical only"
+        type: string
+        required: false
+      daily_seed:
+        description: "Daily generator seed"
+        type: number
+        default: 42
+      daily_orders:
+        description: "Orders for the daily batch"
+        type: number
+        default: 100
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ecobottle-bigquery
+  cancel-in-progress: false
+
+jobs:
+  historical:
+    if: >-
+      github.repository == 'Ingbakk16/practica-imond' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/big-query')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: bigquery
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      PYTHONUNBUFFERED: "1"
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      BQ_LOCATION: ${{ vars.BQ_LOCATION || 'US' }}
+      BQ_MAX_BYTES_BILLED: "1000000000"
+      DBT_SEND_ANONYMOUS_USAGE_STATS: "false"
+      DBT_PROFILES_DIR: ${{ github.workspace }}/dbt
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set temporary paths and check configuration
+        env:
+          WIF_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          SERVICE_ACCOUNT: ${{ vars.GCP_SERVICE_ACCOUNT }}
+        run: |
+          echo "LOG_DIR=$RUNNER_TEMP/bigquery-logs" >> "$GITHUB_ENV"
+          echo "GENERATED_RAW=$RUNNER_TEMP/generated-raw" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/bigquery-logs"
+          for name in GCP_PROJECT_ID WIF_PROVIDER SERVICE_ACCOUNT; do
+            if [[ -z "${!name}" ]]; then
+              echo "Missing GitHub environment variable: $name. See cloud/README.md."
+              exit 1
+            fi
+          done
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Install cloud dependencies
+        run: |
+          python -m pip install -r cloud/requirements.txt 2>&1 | tee "$LOG_DIR/install.log"
+
+      - name: Test bootstrap safeguards
+        run: |
+          python -m unittest discover -s cloud/tests -v 2>&1 | tee "$LOG_DIR/unit-tests.log"
+          python -m unittest discover -s generator/tests -v 2>&1 | tee "$LOG_DIR/daily-tests.log"
+
+      - name: Generate and validate historical base
+        run: |
+          python generator/generate_raw.py --seed 42 --out "$GENERATED_RAW" 2>&1 | tee "$LOG_DIR/generate.log"
+          python generator/validate_raw.py --dir "$GENERATED_RAW" 2>&1 | tee "$LOG_DIR/source-validation.log"
+          python - <<'PY'
+          import filecmp
+          import os
+          from pathlib import Path
+          generated = Path(os.environ['GENERATED_RAW'])
+          expected = {path.name for path in Path('raw').glob('*.csv')}
+          assert expected == {path.name for path in generated.glob('*.csv')}, 'Source file sets differ'
+          for name in sorted(expected):
+              assert filecmp.cmp(Path('raw') / name, generated / name, shallow=False), f'Historical CSV differs: {name}'
+          print('Generated base matches the committed historical reference.')
+          PY
+
+      - name: Build and audit DuckDB reference
+        run: |
+          python run_sql.py 2>&1 | tee "$LOG_DIR/duckdb-build.log"
+          python validate_warehouse.py 2>&1 | tee "$LOG_DIR/duckdb-audit.log"
+
+      - name: Authenticate to Google Cloud without a private key
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Load or verify historical initialization
+        run: |
+          python cloud/load_historical.py --dir "$GENERATED_RAW" 2>&1 | tee "$LOG_DIR/load.log"
+
+      - name: Prepare daily schema without changing existing rows
+        run: |
+          python cloud/setup_daily.py 2>&1 | tee "$LOG_DIR/daily-schema.log"
+
+      - name: Build and test BigQuery models
+        working-directory: dbt
+        run: |
+          dbt build 2>&1 | tee "$LOG_DIR/dbt-build.log"
+
+      - name: Reconcile BigQuery with DuckDB
+        run: |
+          python cloud/reconcile.py --database warehouse.duckdb 2>&1 | tee "$LOG_DIR/reconciliation.log"
+
+      - name: Generate and validate optional daily batch
+        if: ${{ inputs.daily_date != '' }}
+        env:
+          DAILY_DATE: ${{ inputs.daily_date }}
+          DAILY_SEED: ${{ inputs.daily_seed }}
+          DAILY_ORDERS: ${{ inputs.daily_orders }}
+        run: |
+          echo "DAILY_RAW=$RUNNER_TEMP/daily-raw" >> "$GITHUB_ENV"
+          python generator/generate_daily.py --date "$DAILY_DATE" --seed "$DAILY_SEED" --orders "$DAILY_ORDERS" --out "$RUNNER_TEMP/daily-raw" 2>&1 | tee "$LOG_DIR/daily-generate.log"
+          python generator/validate_daily.py --dir "$RUNNER_TEMP/daily-raw" 2>&1 | tee "$LOG_DIR/daily-validation.log"
+
+      - name: Load optional daily batch
+        if: ${{ inputs.daily_date != '' }}
+        run: |
+          python cloud/load_daily.py --dir "$DAILY_RAW" 2>&1 | tee "$LOG_DIR/daily-load.log"
+
+      - name: Rebuild and reconcile after daily load
+        if: ${{ inputs.daily_date != '' }}
+        working-directory: dbt
+        run: |
+          dbt build 2>&1 | tee "$LOG_DIR/daily-dbt-build.log"
+          python ../cloud/reconcile.py --database ../warehouse.duckdb 2>&1 | tee "$LOG_DIR/daily-historical-reconciliation.log"
+          python ../cloud/reconcile_daily.py --dir "$DAILY_RAW" 2>&1 | tee "$LOG_DIR/daily-reconciliation.log"
+
+      - name: Verify source preservation
+        if: ${{ always() && !cancelled() }}
+        run: |
+          git diff --exit-code HEAD -- raw/
+          test -z "$(git ls-files --others --exclude-standard -- raw/)"
+
+      - name: Write cloud summary
+        if: ${{ always() && !cancelled() }}
+        env:
+          RESULT: ${{ job.status }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/bigquery-logs"
+          cat > "$RUNNER_TEMP/bigquery-logs/summary.md" <<EOF
+          ## Historical BigQuery build
+
+          Result: $RESULT
+          Project: $GCP_PROJECT_ID
+          Location: $BQ_LOCATION
+
+          See bigquery-diagnostics for command logs and dbt results (7 days).
+          Optional daily date: ${{ inputs.daily_date || 'none (historical only)' }}
+          No schedule or Power BI refresh is performed by this workflow.
+          EOF
+          cat "$RUNNER_TEMP/bigquery-logs/summary.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload cloud diagnostics
+        if: ${{ always() && !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: bigquery-diagnostics
+          path: |
+            ${{ runner.temp }}/bigquery-logs/
+            dbt/target/manifest.json
+            dbt/target/run_results.json
+          retention-days: 7
+          if-no-files-found: warn

@@ -178,3 +178,26 @@ Para cada cambio:
 - `python3 run_sql.py` termina sin errores.
 - Las tablas exportadas y el diagrama representan el modelo actual.
 - Las consultas KPI tienen una definición explícita y reproducible.
+
+## 10. Validación automática en GitHub Actions
+
+El workflow [`.github/workflows/validate.yml`](.github/workflows/validate.yml) valida la práctica histórica en Ubuntu con Python 3.12 y la versión de DuckDB fijada en `requirements.txt`. Se ejecuta en pull requests, pushes a `main` o `feature/big-query` y de forma manual. No requiere credenciales de Google Cloud ni otros secretos.
+
+Controles, en orden:
+
+1. Generar el histórico con semilla 42 en una carpeta temporal del runner y validarlo con `generator/validate_raw.py --dir ...`, sin sobrescribir `raw/`.
+2. Validar los CSV históricos versionados en `raw/`.
+3. Ejecutar `python run_sql.py` y `python validate_warehouse.py` sobre esos CSV.
+4. Comprobar que no se modificaron ni agregaron archivos de origen, incluso si falló un control anterior.
+
+Los comandos guardan logs sin ocultar sus códigos de error: si falla un control, falla el job. Las exportaciones de `dw/` se reconstruyen solo en el runner descartable y no se guardan mediante commits automáticos.
+
+Para lanzarlo manualmente, abrir **Actions → Validate historical pipeline → Run workflow** y seleccionar la rama. GitHub solo ofrece el botón cuando el workflow también existe en la rama predeterminada; antes de integrarlo, el push a `feature/big-query` y los pull requests permiten probarlo.
+
+El resumen de la ejecución muestra el resultado de cada control. Los logs y una copia del resumen se publican como artifact **validation-logs**, con retención de siete días, también si fallan las validaciones. Una cancelación puede impedir la publicación de diagnósticos. No se publica la base completa ni se cambia el circuito local de la práctica.
+
+## 11. Histórico cloud en BigQuery (opcional)
+
+La extensión de fase 2 usa [`.github/workflows/bigquery.yml`](.github/workflows/bigquery.yml), de ejecución exclusivamente manual. Genera una base temporal con el generador original, carga las fuentes una sola vez, construye el modelo con dbt y lo concilia con DuckDB. No reemplaza los pasos locales anteriores ni agrega credenciales al CI de pull requests.
+
+La configuración del proyecto GCP, datasets, permisos OIDC, variables de GitHub y reintentos se detalla en [`cloud/README.md`](cloud/README.md). Las dependencias están separadas en `cloud/requirements.txt`; los modelos cloud están en `dbt/`. Antes de ejecutar se debe confirmar la vinculación al crédito de prueba y configurar controles de consumo.
