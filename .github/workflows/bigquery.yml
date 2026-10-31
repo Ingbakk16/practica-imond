@@ -34,6 +34,9 @@ jobs:
     permissions:
       contents: read
       id-token: write
+    defaults:
+      run:
+        shell: bash # GitHub runs explicit bash with -e -o pipefail; tee must not mask failures.
     env:
       PYTHONUNBUFFERED: "1"
       GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
@@ -61,6 +64,13 @@ jobs:
               exit 1
             fi
           done
+
+      - name: Verify piped failures stop the job
+        run: |
+          if (exit 17) | tee /dev/null; then
+            echo "A failed command was hidden by tee; pipefail is required."
+            exit 1
+          fi
 
       - name: Set up Python
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0

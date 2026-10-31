@@ -8,6 +8,7 @@ import sys
 from datetime import date, timedelta
 from pathlib import Path
 
+from google.api_core.exceptions import NotFound
 from google.cloud import bigquery
 
 from config import Config
@@ -92,9 +93,9 @@ def load(directory, historical, config):
                          f"SELECT {columns}, @day FROM `{temp_id}`", [
                 bigquery.ScalarQueryParameter("day", "STRING", day),
             ])
-            rows = config.query(client, f"SELECT COUNT(*) AS rows FROM `{table_id}` WHERE batch_id = @day", [
+            rows = config.query(client, f"SELECT COUNT(*) AS row_count FROM `{table_id}` WHERE batch_id = @day", [
                 bigquery.ScalarQueryParameter("day", "STRING", day),
-            ])[0].rows
+            ])[0].row_count
             if rows != manifest["files"][table]["rows"]:
                 raise ValueError(f"{table}: expected {manifest['files'][table]['rows']} rows, got {rows}")
             print(f"Daily {day} {table}: {rows} rows")

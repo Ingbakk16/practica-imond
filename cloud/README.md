@@ -83,6 +83,8 @@ Orden de ejecución:
 
 El artifact **`bigquery-diagnostics`** conserva logs, resumen, `manifest.json` y `run_results.json` de dbt durante siete días, incluso ante fallos no cancelados. Los scripts Python informan bytes procesados por sus consultas; dbt registra sus resultados y los jobs pueden revisarse en BigQuery Job history. La concurrencia del workflow impide dos cargas simultáneas de esta demo.
 
+**Comprobación después de corregir errores de acceso o SQL:** ejecutar primero el workflow con `daily_date` vacío. Un resultado verde debe implicar que carga, `dbt build` y conciliación terminaron sin errores (el shell ahora usa `pipefail`, para que `tee` no oculte fallos). Ejecutarlo por segunda vez y confirmar en `load.log` que el bootstrap histórico se omite. Solo después probar una fecha diaria. Los runs anteriores a esta corrección podían figurar verdes aunque los comandos cloud fallaran: no constituyen aceptación de la fase 2.
+
 No hay publicación atómica de todo el warehouse: si dbt falla, corregir y volver a construir antes de consumirlo. No refrescar Power BI en esta fase.
 
 ## 5. Reintentos y protección de los datos

@@ -30,7 +30,7 @@ def queries(table, historical=False):
                    "fact_web_session": "session_id", "fact_nps_response": "nps_id"}[name]
             return f" where {key} < 1000000000"
         return ""
-    counts = " union all ".join(f"select '{name}' as name, count(*) as rows from {table(name)}{scope(name)}" for name in TABLES)
+    counts = " union all ".join(f"select '{name}' as name, count(*) as row_count from {table(name)}{scope(name)}" for name in TABLES)
     sales_scope = "where f.order_id < 1000000000" if historical else ""
     items_scope = "where f.order_item_id < 1000000000" if historical else ""
     sessions_scope = "where f.session_id < 1000000000" if historical else ""

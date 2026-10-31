@@ -72,7 +72,8 @@ class DailyLoaderTests(unittest.TestCase):
             if sql.startswith("SELECT fingerprint"):
                 return [SimpleNamespace(fingerprint=batch_fingerprint(self.manifest), status="loading")]
             if sql.startswith("SELECT COUNT"):
-                return [SimpleNamespace(rows=0)]
+                self.assertIn("AS row_count", sql)
+                return [SimpleNamespace(row_count=0)]
             self.assertIn("@day", sql)
             return []
 
