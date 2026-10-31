@@ -1,6 +1,8 @@
 import contextlib
 import csv
 import io
+import json
+import hashlib
 from datetime import date, datetime, timedelta
 from pathlib import Path
 import sys
@@ -8,7 +10,7 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from generate_daily import HEADERS, generate, generate_range
+from generate_daily import FIRST_DAILY_ID, FIRST_DAY, HEADERS, VERSION, generate, generate_range
 from validate_daily import validate_batch
 from validate_raw import Report, load, validate
 
@@ -57,6 +59,39 @@ class DailyTests(unittest.TestCase):
         with (folder / "customer.csv").open("a") as file:
             file.write("invalid\n")
         with self.assertRaises(ValueError):
+            self.check(folder)
+
+    def test_first_possible_day_is_above_every_historical_id(self):
+        folder = self.root / "first-day"
+        manifest = generate(FIRST_DAY, 42, 100, folder)
+        self.assertEqual(manifest["version"], VERSION)
+        self.assertEqual(VERSION, 2)
+        self.check(folder)
+        historical_ids = {
+            "address": "address_id", "customer": "customer_id", "sales_order": "order_id",
+            "sales_order_item": "order_item_id", "payment": "payment_id", "shipment": "shipment_id",
+            "web_session": "session_id", "nps_response": "nps_id",
+        }
+        largest_historical = 0
+        for table, key in historical_ids.items():
+            with (HISTORICAL / f"{table}.csv").open(encoding="utf-8", newline="") as file:
+                largest_historical = max(largest_historical, *(int(row[key]) for row in csv.DictReader(file)))
+        self.assertLess(largest_historical, FIRST_DAILY_ID)
+        for table, key in historical_ids.items():
+            if table not in HEADERS:
+                continue
+            with (folder / f"{table}.csv").open(encoding="utf-8", newline="") as file:
+                self.assertTrue(all(int(row[key]) >= FIRST_DAILY_ID for row in csv.DictReader(file)))
+
+    def test_validator_rejects_old_ids_even_if_checksum_matches(self):
+        folder = self.root / "old-ids"
+        manifest = generate(FIRST_DAY, 42, 100, folder)
+        path = folder / "sales_order.csv"
+        content = path.read_text(encoding="utf-8")
+        path.write_text(content.replace(str(FIRST_DAILY_ID), "1000000000", 1), encoding="utf-8")
+        manifest["files"]["sales_order"]["sha256"] = hashlib.sha256(path.read_bytes()).hexdigest()
+        (folder / "manifest.json").write_text(json.dumps(manifest, sort_keys=True), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "outside the batch namespace"):
             self.check(folder)
 
     def test_seven_days_independent_and_combined(self):

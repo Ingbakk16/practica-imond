@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Provision empty daily tables for dbt; never truncate or modify existing data."""
 
+import json
 import sys
 from pathlib import Path
 
@@ -11,7 +12,7 @@ from config import Config
 from load_historical import schema_for
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "generator"))
-from generate_daily import HEADERS
+from generate_daily import HEADERS, VERSION
 
 
 def setup(config):
@@ -34,6 +35,16 @@ def setup(config):
     else:
         if [(f.name, f.field_type) for f in existing_marker.schema] != [(f.name, f.field_type) for f in marker_schema]:
             raise ValueError("Unexpected daily batch marker schema")
+        for batch in config.query(client, f"SELECT batch_id, manifest FROM `{marker}`"):
+            try:
+                version = json.loads(batch.manifest)["version"]
+            except (TypeError, ValueError, KeyError) as error:
+                raise ValueError(f"Invalid manifest for daily batch {batch.batch_id}") from error
+            if version != VERSION:
+                raise ValueError(
+                    f"Daily batch {batch.batch_id} uses generator version {version}; "
+                    "migrate it explicitly before using the new ID namespace"
+                )
     for table in HEADERS:
         table_id = f"{config.project}.ecobottle_raw.daily_{table}"
         expected = [*schema_for(table), bigquery.SchemaField("batch_id", "STRING")]
