@@ -8,7 +8,7 @@ import json
 from datetime import datetime, time
 from pathlib import Path
 
-from generate_daily import FIRST_DAY, HEADERS, VERSION
+from generate_daily import FIRST_DAY, HEADERS, IDS_PER_DAY, VERSION, batch_base
 from validate_raw import Report, TABLES, load, validate
 
 
@@ -24,7 +24,7 @@ def validate_batch(directory, historical):
     if not isinstance(manifest["seed"], int) or not isinstance(manifest["orders"], int) or not 1 <= manifest["orders"] <= 10000:
         raise ValueError("Invalid seed/order count")
     data = load(historical)
-    base = 1_000_000_000 + (day - FIRST_DAY).days * 100_001
+    base = batch_base(day)
     keys = {"address": "address_id", "customer": "customer_id", "sales_order": "order_id",
             "sales_order_item": "order_item_id", "payment": "payment_id",
             "shipment": "shipment_id", "web_session": "session_id"}
@@ -37,7 +37,7 @@ def validate_batch(directory, historical):
             rows = list(reader)
         if manifest["files"][table] != {"rows": len(rows), "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}:
             raise ValueError(f"Batch checksum/count mismatch: {table}")
-        if any(not base <= int(row[keys[table]]) < base + 100_000 for row in rows):
+        if any(not base <= int(row[keys[table]]) < base + IDS_PER_DAY for row in rows):
             raise ValueError(f"IDs outside the batch namespace: {table}")
         if table in ("sales_order", "customer", "address", "payment", "shipment", "web_session"):
             column = {"sales_order": "order_date", "customer": "created_at", "address": "created_at",

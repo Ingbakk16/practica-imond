@@ -152,6 +152,18 @@ Hasta ejecutar los controles cloud, la fase está implementada pero no verificad
 
 El generador original y los 13 CSV de `raw/` no cambian. Cada día usa fecha Argentina, semilla 42 y 100 pedidos por defecto. En días de apertura genera ventas presenciales completas; los domingos y feriados fijos del generador original (01/01, 01/05, 25/12), tiendas cerradas, genera pedidos online `PAID`, envío `READY` y una sesión web por pedido. No inventa entregas ni encuestas. En ambas variantes crea clientes y direcciones nuevos; `shipment.csv` y `web_session.csv` diarios están vacíos los días presenciales. La fecha elegida es explícita, desde el 01/10/2025 en adelante; el salto desde el histórico no se rellena automáticamente. Otros feriados móviles no se modelan en esta demo.
 
+**IDs y compatibilidad:** el histórico ya usa IDs de hasta 13.000 millones; la versión 2 del generador diario reserva IDs desde 20.000 millones, incluso para el primer día permitido (01/10/2025). El validador rechaza IDs diarios fuera de ese rango. Antes de cargar un lote, consultar `ecobottle_ops.daily_batches` en BigQuery para comprobar si hay lotes anteriores; `cloud/setup_daily.py` detiene el workflow si encuentra manifiestos de otra versión. No borrar marcadores ni tablas para sortear ese bloqueo: cualquier migración de lotes ya cargados requiere un plan específico. La conciliación histórica compara exclusivamente IDs anteriores al nuevo rango diario.
+
+En el editor SQL de BigQuery (sustituir `PROJECT_ID`), verificar antes de habilitar lotes diarios:
+
+```sql
+SELECT batch_id, status, JSON_VALUE(manifest, '$.version') AS generator_version
+FROM `PROJECT_ID.ecobottle_ops.daily_batches`
+ORDER BY batch_id;
+```
+
+Si aparecen lotes de versión 1, detenerse y pedir una migración explícita; no volver a generar o eliminar datos históricos.
+
 Comprobación **sin cloud** (usar un directorio nuevo cada vez):
 
 ```bash

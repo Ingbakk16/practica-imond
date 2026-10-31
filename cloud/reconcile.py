@@ -2,11 +2,15 @@
 """Compare historical BigQuery counts and KPIs with a read-only DuckDB reference."""
 
 import argparse
+import sys
 from pathlib import Path
 
 import duckdb
 
 from config import Config
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "generator"))
+from generate_daily import FIRST_DAILY_ID
 
 
 TABLES = (
@@ -24,16 +28,17 @@ def queries(table, historical=False):
         if name == "dim_date":
             return " where date_key <= 20250930"
         if name == "dim_customer":
-            return " where customer_key < 1000000000"
+            return f" where customer_key < {FIRST_DAILY_ID}"
         if name.startswith("fact_"):
             key = {"fact_sales_order": "order_id", "fact_sales_order_item": "order_item_id",
                    "fact_web_session": "session_id", "fact_nps_response": "nps_id"}[name]
-            return f" where {key} < 1000000000"
+            return f" where {key} < {FIRST_DAILY_ID}"
         return ""
     counts = " union all ".join(f"select '{name}' as name, count(*) as row_count from {table(name)}{scope(name)}" for name in TABLES)
-    sales_scope = "where f.order_id < 1000000000" if historical else ""
-    items_scope = "where f.order_item_id < 1000000000" if historical else ""
-    sessions_scope = "where f.session_id < 1000000000" if historical else ""
+    sales_scope = f"where f.order_id < {FIRST_DAILY_ID}" if historical else ""
+    items_scope = f"where f.order_item_id < {FIRST_DAILY_ID}" if historical else ""
+    sessions_scope = f"where f.session_id < {FIRST_DAILY_ID}" if historical else ""
+    nps_scope = f"where f.nps_id < {FIRST_DAILY_ID}" if historical else ""
     return {
         "table_counts": counts + " order by name",
         "monthly_sales": f"""
@@ -69,6 +74,7 @@ def queries(table, historical=False):
                 sum(case when f.customer_key = -1 then 1 else 0 end) as anonymous
             from {table('fact_nps_response')} as f
             join {table('dim_channel')} as c on c.channel_key = f.channel_key
+            {nps_scope}
             group by month, c.code order by month, c.code""",
     }
 

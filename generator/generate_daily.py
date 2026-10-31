@@ -13,9 +13,13 @@ from pathlib import Path
 from generate_raw import CITIES, FIRST_NAMES, LAST_NAMES, PRODUCTS, SHIPPING_FEE, STORES, STREETS
 
 
-VERSION = 1
+VERSION = 2
 FIRST_DAY = date(2025, 10, 1)
 MAX_ORDERS = 10000
+# Above every historical ID (the largest NPS ID is 13,000,003,082).
+# Do not change this namespace without migrating already-completed batches.
+FIRST_DAILY_ID = 20_000_000_000
+IDS_PER_DAY = 100_001
 HEADERS = {
     "address": "address_id line1 line2 city province_id postal_code country_code created_at",
     "customer": "customer_id email first_name last_name phone status created_at",
@@ -28,6 +32,10 @@ HEADERS = {
 HEADERS = {table: columns.split() for table, columns in HEADERS.items()}
 
 
+def batch_base(day):
+    return FIRST_DAILY_ID + (day - FIRST_DAY).days * IDS_PER_DAY
+
+
 def generate(day, seed, count, directory):
     if day < FIRST_DAY or day >= date(2200, 1, 1):
         raise ValueError(f"Date must be between {FIRST_DAY} and 2199-12-31")
@@ -38,7 +46,7 @@ def generate(day, seed, count, directory):
     directory.mkdir(parents=True, exist_ok=True)
     rng = random.Random(f"ecobottle-daily-v{VERSION}:{day.isoformat()}:{seed}")
     # One namespace per date, 10 IDs per order per table. Separate from historical IDs.
-    base = 1_000_000_000 + (day - FIRST_DAY).days * 100_001
+    base = batch_base(day)
     rows = {name: [] for name in HEADERS}
     online = day.weekday() == 6 or (day.month, day.day) in {(1, 1), (5, 1), (12, 25)}
     # Shops are closed on Sundays and the fixed holidays covered by the historical generator.
