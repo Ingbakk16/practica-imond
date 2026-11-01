@@ -131,6 +131,15 @@ Las franquicias publicadas de BigQuery incluyen 10 GiB de almacenamiento y 1 TiB
 
 ### Plan de puesta en marcha de la automatización
 
+**Preparación de release verificada (2026-11-01):** la automatización del commit `aa8a06b` se incorporó a `main` mediante el PR #5 (merge `361871a`). La [validación en `main`](https://github.com/Ingbakk16/practica-imond/actions/runs/41321776152) terminó exitosamente: incluye tests offline, `dbt parse`, generación histórica, construcción/auditoría del warehouse y preservación de fuentes. En esta revisión pasaron también 32 tests cloud y 7 del generador localmente, y `actionlint` 1.7.12 sobre ambos workflows (sin ShellCheck). El `dbt parse` local quedó bloqueado por dependencias incompletas del entorno; el parse del runner con Python 3.12 sí pasó. No se activó el cron ni se modificaron variables de GitHub o recursos GCP.
+
+- [x] Automatización publicada en `main` y validación alojada exitosa.
+- [x] Tests existentes y lint de workflows revisados, sin agregar fallos inducidos.
+- [ ] Propietario confirma controles de facturación y consumo antes de habilitar.
+- [ ] Propietario elige la primera fecha de negocio y configura `ECOBOTTLE_DAILY_START_DATE` en el environment `bigquery`.
+- [ ] Configurar `ECOBOTTLE_DAILY_ENABLED=true` a nivel repositorio y avisos de fallos.
+- [ ] Comprobar el primer run programado y observar siete ejecuciones.
+
 1. **Publicar la versión revisada:** revisar los cambios pendientes de automatización, ejecutar los tests existentes de `cloud/tests` y `generator/tests`, validar el workflow con `actionlint` y llevar los cambios a `main`. Confirmar checks exitosos en GitHub Actions. No agregar pruebas de inyección de fallos.
 2. **Confirmar límites de consumo:** verificar proyecto y facturación, vencimiento del crédito, alertas de presupuesto y cuotas de consultas. Las alertas no bloquean cargos. No habilitar cron sin la confirmación del propietario.
 3. **Elegir la fecha de inicio:** configurar `ECOBOTTLE_DAILY_START_DATE` (`YYYY-MM-DD`) en el environment `bigquery`, usando la primera fecha de negocio acordada para la automatización. No usar automáticamente el corte histórico ni las fechas de pruebas. Mantener semilla 42 y 100 pedidos, también al reintentar fechas ya cargadas con esos parámetros.
