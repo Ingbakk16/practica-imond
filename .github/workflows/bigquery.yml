@@ -1,10 +1,14 @@
-name: Build historical BigQuery warehouse
+name: Build BigQuery warehouse
 
 on:
   workflow_dispatch:
     inputs:
       daily_date:
         description: "Optional Argentina business date (YYYY-MM-DD); blank = historical only"
+        type: string
+        required: false
+      daily_end:
+        description: "Optional inclusive end date (at most 7 days including daily_date)"
         type: string
         required: false
       daily_seed:
@@ -15,6 +19,9 @@ on:
         description: "Orders for the daily batch"
         type: number
         default: 100
+  schedule:
+    # 06:17 UTC = 03:17 Argentina (UTC-3); process the prior local business day.
+    - cron: '17 6 * * *'
 
 permissions:
   contents: read
@@ -27,9 +34,10 @@ jobs:
   historical:
     if: >-
       github.repository == 'Ingbakk16/practica-imond' &&
-      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/big-query')
+      ((github.event_name == 'schedule' && vars.ECOBOTTLE_DAILY_ENABLED == 'true' && github.ref == 'refs/heads/main') ||
+       (github.event_name == 'workflow_dispatch' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/big-query')))
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 90
     environment: bigquery
     permissions:
       contents: read
@@ -131,29 +139,56 @@ jobs:
         run: |
           python cloud/reconcile.py --database warehouse.duckdb 2>&1 | tee "$LOG_DIR/reconciliation.log"
 
-      - name: Generate and validate optional daily batch
-        if: ${{ inputs.daily_date != '' }}
+      - name: Select manual dates or scheduled catch-up
         env:
           DAILY_DATE: ${{ inputs.daily_date }}
+          DAILY_END: ${{ inputs.daily_end }}
+          DAILY_SEED: ${{ inputs.daily_seed }}
+          DAILY_ORDERS: ${{ inputs.daily_orders }}
+          GO_LIVE: ${{ vars.ECOBOTTLE_DAILY_START_DATE }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          echo "DAILY_RAW=$RUNNER_TEMP/daily-raw" >> "$GITHUB_ENV"
+          echo "DAILY_DATES=$RUNNER_TEMP/daily-dates.txt" >> "$GITHUB_ENV"
+          if [[ "$EVENT_NAME" == schedule ]]; then
+            if [[ -z "$GO_LIVE" ]]; then
+              echo 'Set ECOBOTTLE_DAILY_START_DATE before enabling the schedule.'
+              exit 1
+            fi
+            python cloud/select_daily_dates.py --scheduled --go-live "$GO_LIVE" --out "$RUNNER_TEMP/daily-dates.txt" 2>&1 | tee "$LOG_DIR/daily-selection.log"
+          else
+            args=()
+            if [[ -n "$DAILY_DATE" ]]; then args+=(--date "$DAILY_DATE"); fi
+            if [[ -n "$DAILY_END" ]]; then args+=(--end "$DAILY_END"); fi
+            python cloud/select_daily_dates.py "${args[@]}" --out "$RUNNER_TEMP/daily-dates.txt" 2>&1 | tee "$LOG_DIR/daily-selection.log"
+          fi
+
+      - name: Generate, validate and load selected days
+        env:
           DAILY_SEED: ${{ inputs.daily_seed }}
           DAILY_ORDERS: ${{ inputs.daily_orders }}
         run: |
-          echo "DAILY_RAW=$RUNNER_TEMP/daily-raw" >> "$GITHUB_ENV"
-          python generator/generate_daily.py --date "$DAILY_DATE" --seed "$DAILY_SEED" --orders "$DAILY_ORDERS" --out "$RUNNER_TEMP/daily-raw" 2>&1 | tee "$LOG_DIR/daily-generate.log"
-          python generator/validate_daily.py --dir "$RUNNER_TEMP/daily-raw" 2>&1 | tee "$LOG_DIR/daily-validation.log"
-
-      - name: Load optional daily batch
-        if: ${{ inputs.daily_date != '' }}
-        run: |
-          python cloud/load_daily.py --dir "$DAILY_RAW" 2>&1 | tee "$LOG_DIR/daily-load.log"
+          seed="${DAILY_SEED:-42}"
+          orders="${DAILY_ORDERS:-100}"
+          while IFS= read -r day; do
+            directory="$DAILY_RAW/$day"
+            python generator/generate_daily.py --date "$day" --seed "$seed" --orders "$orders" --out "$directory" 2>&1 | tee "$LOG_DIR/daily-generate-$day.log"
+            python generator/validate_daily.py --dir "$directory" 2>&1 | tee "$LOG_DIR/daily-validation-$day.log"
+            python cloud/load_daily.py --dir "$directory" 2>&1 | tee "$LOG_DIR/daily-load-$day.log"
+          done < "$DAILY_DATES"
 
       - name: Rebuild and reconcile after daily load
-        if: ${{ inputs.daily_date != '' }}
+        if: ${{ github.event_name == 'schedule' || inputs.daily_date != '' }}
         working-directory: dbt
         run: |
-          dbt build 2>&1 | tee "$LOG_DIR/daily-dbt-build.log"
-          python ../cloud/reconcile.py --database ../warehouse.duckdb 2>&1 | tee "$LOG_DIR/daily-historical-reconciliation.log"
-          python ../cloud/reconcile_daily.py --dir "$DAILY_RAW" 2>&1 | tee "$LOG_DIR/daily-reconciliation.log"
+          if [[ -s "$DAILY_DATES" ]]; then
+            dbt build 2>&1 | tee "$LOG_DIR/daily-dbt-build.log"
+            python ../cloud/reconcile.py --database ../warehouse.duckdb 2>&1 | tee "$LOG_DIR/daily-historical-reconciliation.log"
+            while IFS= read -r day; do
+              python ../cloud/reconcile_daily.py --dir "$DAILY_RAW/$day" 2>&1 | tee "$LOG_DIR/daily-reconciliation-$day.log"
+              python ../cloud/mark_daily_validated.py --date "$day" 2>&1 | tee "$LOG_DIR/daily-mark-$day.log"
+            done < "$DAILY_DATES"
+          fi
 
       - name: Verify source preservation
         if: ${{ always() && !cancelled() }}
@@ -168,15 +203,16 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/bigquery-logs"
           cat > "$RUNNER_TEMP/bigquery-logs/summary.md" <<EOF
-          ## Historical BigQuery build
+          ## BigQuery build
 
           Result: $RESULT
           Project: $GCP_PROJECT_ID
           Location: $BQ_LOCATION
 
           See bigquery-diagnostics for command logs and dbt results (7 days).
-          Optional daily date: ${{ inputs.daily_date || 'none (historical only)' }}
-          No schedule or Power BI refresh is performed by this workflow.
+          Event: ${{ github.event_name }}
+          Daily dates: $(tr '\n' ' ' < "$DAILY_DATES" 2>/dev/null || true)
+          No Power BI refresh is performed by this workflow.
           EOF
           cat "$RUNNER_TEMP/bigquery-logs/summary.md" >> "$GITHUB_STEP_SUMMARY"
 
