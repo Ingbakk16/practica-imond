@@ -1,6 +1,6 @@
-# Histórico en BigQuery con dbt (fase 2)
+# BigQuery con dbt: histórico y lotes diarios
 
-Este circuito agrega una ejecución cloud manual sin reemplazar la práctica local. Genera la base original con semilla 42, valida los CSV, carga las 13 fuentes una sola vez y construye las seis dimensiones y cuatro hechos con dbt Core. Puede cargar opcionalmente un lote diario por ejecución manual (ver fase 3 abajo); no actualiza Power BI todavía.
+Este circuito agrega una ejecución cloud sin reemplazar la práctica local. Genera la base original con semilla 42, valida los CSV, carga las 13 fuentes una sola vez y construye las seis dimensiones y cuatro hechos con dbt Core. Admite lotes diarios manuales y una programación opt-in (ver fase 4 abajo); no actualiza Power BI todavía.
 
 ## 1. Preparar el proyecto una sola vez
 
@@ -71,7 +71,7 @@ El workflow solo admite el repositorio original y esas ramas. No se dispara en p
 
 ## 4. Ejecutar y comprobar
 
-Una vez integrado el workflow en la rama predeterminada, abrir **Actions → Build historical BigQuery warehouse → Run workflow** y seleccionar una rama autorizada. GitHub requiere que un workflow manual exista en la rama predeterminada para mostrar el botón. No hay push ni schedule automático para el circuito cloud.
+Una vez integrado el workflow en la rama predeterminada, abrir **Actions → Build BigQuery warehouse → Run workflow** y seleccionar una rama autorizada. GitHub requiere que un workflow manual exista en la rama predeterminada para mostrar el botón. No hay ejecución por push; el cron está desactivado hasta su habilitación explícita (ver fase 4).
 
 Orden de ejecución:
 
@@ -148,7 +148,7 @@ Hasta ejecutar los controles cloud, la fase está implementada pero no verificad
 
 ## Fase 3: un lote diario manual (sin schedule)
 
-**Primero cerrar la aceptación de la fase 2.** La ejecución manual de GitHub requiere que el workflow exista en la rama predeterminada; mientras siga solo en `feature/big-query`, no aparecerá el botón «Run workflow». Un PR sin fusionar ejecuta el workflow de validación local, **no** prueba la autenticación OIDC de BigQuery. Para probar cloud antes de fusionar, usar credenciales locales autorizadas y los comandos siguientes; esto puede consumir crédito GCP.
+**Primero cerrar la aceptación de la fase 2.** La ejecución manual de GitHub requiere que el workflow exista en la rama predeterminada. Un PR sin fusionar ejecuta el workflow de validación local, **no** prueba la autenticación OIDC de BigQuery. Para probar cloud antes de fusionar, usar credenciales locales autorizadas y los comandos siguientes; esto puede consumir crédito GCP.
 
 El generador original y los 13 CSV de `raw/` no cambian. Cada día usa fecha Argentina, semilla 42 y 100 pedidos por defecto. En días de apertura genera ventas presenciales completas; los domingos y feriados fijos del generador original (01/01, 01/05, 25/12), tiendas cerradas, genera pedidos online `PAID`, envío `READY` y una sesión web por pedido. No inventa entregas ni encuestas. En ambas variantes crea clientes y direcciones nuevos; `shipment.csv` y `web_session.csv` diarios están vacíos los días presenciales. La fecha elegida es explícita, desde el 01/10/2025 en adelante; el salto desde el histórico no se rellena automáticamente. Otros feriados móviles no se modelan en esta demo.
 
@@ -186,4 +186,14 @@ python cloud/reconcile_daily.py --dir /tmp/ecobottle-day
 
 `cloud/setup_daily.py` crea tablas vacías antes del primer `dbt build`, incluso si solo se quiere reconstruir el histórico. La carga diaria se niega a comenzar sin bootstrap histórico completo, mantiene registros nuevos en `ecobottle_raw.daily_*` (no trunca las fuentes históricas), e identifica cada día con un manifiesto y fingerprint en `ecobottle_ops.daily_batches`. Solo los lotes `complete` son visibles para dbt. Repetir un lote completo con la misma entrada no escribe; cambiar semilla, versión o contenido para una fecha existente se rechaza. Repetir uno `loading` reemplaza únicamente sus propias filas; las tablas analíticas se reconstruyen con dbt después. Ejecutar **un solo escritor cloud a la vez**: el workflow serializa sus ejecuciones, pero los comandos locales simultáneos no están coordinados.
 
-El workflow `Build historical BigQuery warehouse` admite opcionalmente `daily_date`, `daily_seed` y `daily_orders`. Con la fecha vacía solo ejecuta el histórico, como en fase 2. Con fecha, valida primero el histórico, luego genera y carga ese día, ejecuta dbt nuevamente y concilia tanto el histórico como el lote. No hay ejecución programada ni refresh Power BI (fase 4/5). Un fallo después de marcar `complete`, pero antes de dbt, se recupera repitiendo la misma fecha y semilla: la carga se omite y dbt se reconstruye. No refrescar Power BI tras fallos de dbt.
+El workflow **Build BigQuery warehouse** admite opcionalmente `daily_date`, `daily_seed` y `daily_orders`. Con la fecha vacía solo ejecuta el histórico, como en fase 2. Con fecha, valida primero el histórico, luego genera y carga ese día, ejecuta dbt nuevamente y concilia tanto el histórico como el lote. Un fallo después de marcar `complete`, pero antes de dbt, se recupera repitiendo la misma fecha y semilla: la carga se omite y dbt se reconstruye. No refrescar Power BI tras fallos de dbt.
+
+## Fase 4: rangos manuales y programación opcional
+
+El workflow **Build BigQuery warehouse** conserva la ejecución histórica sin fecha. Con `daily_date` y `daily_end` permite hasta siete días consecutivos (ambos extremos incluidos); sin `daily_end`, procesa un día. Usa semilla 42 y 100 pedidos por defecto. Los lotes se generan y cargan uno por uno, después se ejecutan dbt y las conciliaciones; un fallo conserva los lotes ya cargados y repetir las mismas entradas omite esas escrituras. No ejecutar escritores locales simultáneamente con el workflow.
+
+El cron está **desactivado por defecto**: el job programado solo se ejecuta si la variable **del repositorio** (Settings → Secrets and variables → Actions → Variables) **`ECOBOTTLE_DAILY_ENABLED`** vale exactamente `true`. Debe ser de repositorio porque el `if` del job se evalúa antes de cargar variables del environment. Antes de activarlo, verificar facturación, vencimiento de créditos, presupuesto y cuota de consultas; elegir y registrar la primera fecha de la demo en la variable **del environment `bigquery`** `ECOBOTTLE_DAILY_START_DATE` (`YYYY-MM-DD`, desde 2025-10-01). Usar la fecha real de puesta en marcha, no la fecha del corte histórico ni las fechas de pruebas manuales. No es obligatorio llenar el intervalo anterior. El cron corre a las 06:17 UTC (03:17 de Argentina); selecciona hasta el día anterior según `America/Argentina/Buenos_Aires`, no según el reloj UTC del runner.
+
+Cada ejecución consulta los días **validados** desde la fecha de inicio; recupera fechas faltantes y lotes que se cargaron pero fallaron antes de completar dbt y ambas conciliaciones. La tabla `ecobottle_ops.daily_validations` conserva el fingerprint y se escribe **después** de estos controles; `daily_batches.status = complete` solo acredita la carga de origen. Si faltan más de siete fechas, el workflow falla explícitamente, sin saltar ni cargar una selección parcial: recuperar por rangos manuales de hasta siete días y mantener los mismos parámetros para fechas ya cargadas. Un fallo de dbt después de cargar se recupera sin duplicar fuentes. Consultar logs por fecha en `bigquery-diagnostics` (retención de siete días); GitHub Actions puede retrasar u omitir cron, por eso no se asume ejecución puntual. Si hay fallos, no refrescar Power BI. No se configura refresh automático del reporte.
+
+**Antes de dar por cerrada la fase 4:** verificar que una fecha omitida se detecte, observar siete ejecuciones programadas, revisar consumo y configurar avisos de fallo de Actions. El usuario confirmó reejecuciones exitosas de fechas repetidas y de siete días consecutivos. Las pruebas de fallos inducidos durante la carga y antes de dbt se difieren por decisión del usuario; no se consideran aprobadas y la recuperación cloud sigue sin validarse ante esos fallos. La programación no debe activarse hasta que el propietario confirme los límites de costo. Seguir el [plan de puesta en marcha](../ROADMAP_BIGQUERY.md#plan-de-puesta-en-marcha-de-la-automatización), incluida la publicación en `main` antes de habilitar el cron.

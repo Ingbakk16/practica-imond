@@ -105,9 +105,11 @@ Las franquicias publicadas de BigQuery incluyen 10 GiB de almacenamiento y 1 TiB
 - [x] Implementar carga por lote sin duplicados. Ante una carga parcial, reemplazar o limpiar únicamente los registros de ese lote incompleto antes de repetirlo; nunca volver a anexarlos a ciegas.
 - [x] Marcar un lote completo solo cuando sus tablas hayan sido cargadas y validadas. dbt debe leer únicamente lotes completos. Guardar ese registro en BigQuery, no depender de cache o artifacts de Actions.
 - [x] Adaptar los controles del generador a fechas variables sin cambiar las expectativas del dataset histórico.
-- [ ] Probar repetición del mismo día, siete días consecutivos y ejecución equivalente por rango en BigQuery; comprobar que los registros históricos no cambian. Los tests offline de repetición, siete días y equivalencia por rango ya pasan.
+- [x] Probar repetición del mismo día en BigQuery sin duplicados. Confirmado por el usuario.
+- [x] Probar siete días consecutivos y sus reejecuciones en BigQuery. Confirmado por el usuario; todas las ejecuciones fueron exitosas.
+- [ ] Comparar en BigQuery siete días cargados individualmente contra el mismo rango y comprobar explícitamente que los registros históricos no cambian. Los tests offline de equivalencia por rango ya pasan; esta comprobación cloud no se ha confirmado por separado.
 
-**Estado:** código de fase 3 implementado en [`generator/`](generator/), [`cloud/`](cloud/README.md), [`dbt/`](dbt/) y el workflow manual cloud. El workflow de PR valida ahora generador, loader y `dbt parse` sin credenciales; todavía falta confirmar esa nueva versión en GitHub Actions. Los tests offline locales pasan; el cierre cloud sigue bloqueado por la aceptación pendiente de fase 2 y la ausencia del workflow cloud en la rama predeterminada. Ver [`cloud/README.md`](cloud/README.md#fase-3-un-lote-diario-manual-sin-schedule).
+**Estado:** código de fase 3 implementado en [`generator/`](generator/), [`cloud/`](cloud/README.md), [`dbt/`](dbt/) y el workflow manual cloud. El usuario confirmó pruebas cloud exitosas de fechas repetidas y de siete días consecutivos con reejecuciones. Esto actualiza el estado anterior de aceptación cloud pendiente para esas pruebas; no confirma por separado la equivalencia individual/rango, la preservación histórica ni todos los controles de fase 2. Antes de programar, verificar que la versión de automatización esté en `main` y que sus checks pasen. Ver [`cloud/README.md`](cloud/README.md#fase-3-un-lote-diario-manual-sin-schedule).
 
 **Criterio de cierre:** cada lote predeterminado agrega 100 pedidos; repetirlo no duplica registros; siete días juntos o por separado dan el mismo resultado y preservan el histórico.
 
@@ -121,9 +123,22 @@ Las franquicias publicadas de BigQuery incluyen 10 GiB de almacenamiento y 1 TiB
 - [ ] Separar progreso de generación/carga y progreso de dbt: si falla la transformación, repetirla sobre el mismo lote sin volver a generar datos distintos.
 - [ ] Ejecutar validación del lote, controles de frescura y `dbt build`. Registrar filas, fechas procesadas, errores y bytes de consultas.
 - [ ] Activar notificaciones de fallos y documentar cómo reintentar y completar días faltantes.
-- [ ] Probar un fallo durante la carga y otro después de cargar, antes de terminar dbt.
+- **Diferido por decisión del usuario:** probar un fallo durante la carga y otro después de cargar, antes de terminar dbt. No se ejecutarán pruebas de inyección de fallos como requisito para activar esta demo; la recuperación ante fallos reales sigue sin validarse.
 
 **Criterio de cierre:** recuperar un día omitido o una ejecución fallida no requiere editar registros a mano ni borrar el warehouse.
+
+**Avance de implementación (pendiente de aceptación programada):** el workflow admite rangos manuales de hasta siete días y un cron opt-in desactivado por defecto. El selector toma el día anterior en Argentina y busca desde la fecha de inicio configurada; si hay más de siete días pendientes, falla sin cargar un rango parcial. `ecobottle_ops.daily_validations` distingue los lotes cargados de aquellos con dbt y conciliaciones terminadas; un retry conserva fuentes ya completas. Las reejecuciones manuales fueron exitosas según el usuario. Faltan revisar costo, alertas y siete ejecuciones programadas; las pruebas de fallos se difieren y no se consideran aprobadas. Ver [`cloud/README.md`](cloud/README.md#fase-4-rangos-manuales-y-programación-opcional).
+
+### Plan de puesta en marcha de la automatización
+
+1. **Publicar la versión revisada:** revisar los cambios pendientes de automatización, ejecutar los tests existentes de `cloud/tests` y `generator/tests`, validar el workflow con `actionlint` y llevar los cambios a `main`. Confirmar checks exitosos en GitHub Actions. No agregar pruebas de inyección de fallos.
+2. **Confirmar límites de consumo:** verificar proyecto y facturación, vencimiento del crédito, alertas de presupuesto y cuotas de consultas. Las alertas no bloquean cargos. No habilitar cron sin la confirmación del propietario.
+3. **Elegir la fecha de inicio:** configurar `ECOBOTTLE_DAILY_START_DATE` (`YYYY-MM-DD`) en el environment `bigquery`, usando la primera fecha de negocio acordada para la automatización. No usar automáticamente el corte histórico ni las fechas de pruebas. Mantener semilla 42 y 100 pedidos, también al reintentar fechas ya cargadas con esos parámetros.
+4. **Activar el cron:** configurar la variable **del repositorio** `ECOBOTTLE_DAILY_ENABLED=true`. El horario existente es 06:17 UTC, equivalente a 03:17 Argentina; procesa hasta el día anterior. Activar las notificaciones de fallos de GitHub Actions para la cuenta responsable.
+5. **Comprobar el primer run programado:** confirmar que el job no se omite y revisar fechas seleccionadas, carga, `dbt build`, ambas conciliaciones y marcas en `ecobottle_ops.daily_validations`. Consultar el artifact `bigquery-diagnostics`. No refrescar Power BI si falla algún control.
+6. **Observar siete ejecuciones programadas:** registrar resultados y consumo real; comprobar que no quedan fechas pendientes desde el inicio acordado. Las siete reejecuciones manuales ya probadas no sustituyen esta observación del cron.
+
+**Procedimiento ante errores:** poner `ECOBOTTLE_DAILY_ENABLED=false` para impedir futuros jobs programados (no cancela uno en curso), revisar los logs y repetir manualmente las fechas afectadas con los mismos parámetros. Recuperar faltantes en rangos de hasta siete días. No borrar tablas ni editar marcadores de lotes para forzar el reintento. Refrescar Power BI únicamente después de que dbt y las conciliaciones terminen correctamente. La recuperación tiene implementación y tests offline, pero no se ha probado mediante fallos inducidos en cloud.
 
 ## Fase 5 — Conectar Power BI y cerrar la entrega
 

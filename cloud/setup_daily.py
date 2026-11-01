@@ -58,6 +58,19 @@ def setup(config):
         else:
             if [(f.name, f.field_type) for f in existing.schema] != [(f.name, f.field_type) for f in expected]:
                 raise ValueError(f"Unexpected schema for {table_id}")
+    validation_id = f"{config.project}.ecobottle_ops.daily_validations"
+    validation_schema = [
+        bigquery.SchemaField("batch_id", "STRING"),
+        bigquery.SchemaField("fingerprint", "STRING"),
+        bigquery.SchemaField("validated_at", "TIMESTAMP"),
+    ]
+    try:
+        validation = client.get_table(validation_id)
+    except NotFound:
+        client.create_table(bigquery.Table(validation_id, schema=validation_schema))
+    else:
+        if [(f.name, f.field_type) for f in validation.schema] != [(f.name, f.field_type) for f in validation_schema]:
+            raise ValueError(f"Unexpected schema for {validation_id}")
     print("Daily batch tables ready (existing data was not changed)")
 
 
