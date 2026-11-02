@@ -212,7 +212,7 @@ jobs:
           See bigquery-diagnostics for command logs and dbt results (7 days).
           Event: ${{ github.event_name }}
           Daily dates: $(tr '\n' ' ' < "$DAILY_DATES" 2>/dev/null || true)
-          No Power BI refresh is performed by this workflow.
+          Power BI refresh runs in the downstream job when POWERBI_REFRESH_ENABLED=true.
           EOF
           cat "$RUNNER_TEMP/bigquery-logs/summary.md" >> "$GITHUB_STEP_SUMMARY"
 
@@ -227,3 +227,43 @@ jobs:
             dbt/target/run_results.json
           retention-days: 7
           if-no-files-found: warn
+
+  powerbi:
+    name: Refresh Power BI after validated BigQuery build
+    needs: historical
+    if: ${{ needs.historical.result == 'success' && vars.POWERBI_REFRESH_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    environment: bigquery
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      PYTHONUNBUFFERED: "1"
+      POWERBI_TENANT_ID: ${{ vars.POWERBI_TENANT_ID }}
+      POWERBI_CLIENT_ID: ${{ vars.POWERBI_CLIENT_ID }}
+      POWERBI_WORKSPACE_ID: ${{ vars.POWERBI_WORKSPACE_ID }}
+      POWERBI_DATASET_ID: ${{ vars.POWERBI_DATASET_ID }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Refresh published model and wait for completion
+        id: refresh
+        run: python cloud/refresh_powerbi.py
+
+      - name: Write Power BI result
+        if: ${{ always() && !cancelled() }}
+        env:
+          REFRESH_OUTCOME: ${{ steps.refresh.outcome }}
+        run: |
+          echo "## Power BI after BigQuery" >> "$GITHUB_STEP_SUMMARY"
+          echo "Refresh result: $REFRESH_OUTCOME" >> "$GITHUB_STEP_SUMMARY"
+          echo "Success requires the submitted refresh to reach Completed." >> "$GITHUB_STEP_SUMMARY"

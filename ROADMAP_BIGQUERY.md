@@ -153,22 +153,28 @@ Las franquicias publicadas de BigQuery incluyen 10 GiB de almacenamiento y 1 TiB
 
 **Objetivo:** conservar el dashboard, cambiando su fuente de CSV a BigQuery.
 
-**Preparación implementada:** [`powerbi/build_bigquery_project.py`](powerbi/build_bigquery_project.py) genera una copia PBIP separada con las diez fuentes BigQuery Import, el contrato de tipos original, las 16 relaciones, medidas y cinco páginas existentes; agrega medidas de frescura. Los tests offline verifican estructura y preservación del reporte, no ejecutan Power Query ni certifican conectividad. No se modifica el dashboard CSV ni se publica o programa Power BI desde este entorno.
+**Generador integrado:** [`powerbi/build_bigquery_project.py`](powerbi/build_bigquery_project.py) conserva la versión parametrizable de `main`, rechaza sobrescrituras y agrega medidas de frescura. Sus tests offline verifican estructura y preservación del reporte; no ejecutan Power Query. Los artefactos ya publicados de `powerbi/bigquery/` se conservan como una entrega validada separada y no se regeneran durante esta integración.
 
-**Plan manual pendiente:** seguir [`powerbi/BIGQUERY.md`](powerbi/BIGQUERY.md). Confirmar IDs/permisos GCP; generar la copia con IDs reales; autenticar y validar en Desktop; agregar tarjetas de frescura; guardar el `.pbix` cloud separado; publicar en Mi área de trabajo; configurar credenciales y refresh en Service; comprobar siete actualizaciones sin Desktop abierto. La cuenta gratuita universitaria requiere confirmar las funciones y políticas disponibles. El refresh inicial es por horario independiente; condicionarlo al éxito de Actions requiere evaluar API y permisos adicionales.
+**Estado manual verificado:** seguir [`powerbi/bigquery/README.md`](powerbi/bigquery/README.md) para la entrega publicada y [`powerbi/BIGQUERY.md`](powerbi/BIGQUERY.md) para generar otra copia. La conexión Desktop, publicación en `EcoBottle AR` y actualización manual de Service están comprobadas. Quedan pendientes las tarjetas de frescura, la evidencia de conciliación cloud y las siete ejecuciones. El refresh condicionado al éxito ya está implementado; su habilitación requiere recuperar MFA y configurar la identidad de Microsoft Entra, según [`cloud/POWERBI.md`](cloud/POWERBI.md).
 
-- [ ] Sustituir `RutaDW` / importación CSV por el conector de BigQuery en modo Import, con proyecto explícito y permisos de lectura/consulta necesarios.
-- [ ] Revisar tipos monetarios, fechas, relaciones y medidas; conciliar las cinco páginas contra los KPIs del warehouse.
+- [x] Sustituir `RutaDW` / importación CSV por el conector de BigQuery en modo Import, con proyecto explícito y permisos de lectura/consulta necesarios.
+- [x] Revisar tipos monetarios, fechas, relaciones, medidas y visualización de las cinco páginas en la variante BigQuery.
+- [ ] Completar la evidencia de conciliación independiente de las cinco páginas contra los KPIs del warehouse cloud con el mismo corte.
 - [ ] Mostrar fecha de datos y última actualización exitosa.
-- [ ] Si hay Power BI Service disponible, configurar credenciales cloud y solicitar el refresh solo después de que todos los controles pasen; verificar que el refresh termine correctamente.
-- [ ] Si no hay Service, documentar actualización manual en Desktop como alcance inicial. Un warehouse actualizado no actualiza por sí solo el `.pbix` local.
-- [ ] Como alternativa opcional de visualización web, evaluar Looker Studio con su conector BigQuery. Requiere recrear el reporte, respeta su propia política de frescura/cache y sus consultas cuentan para el consumo de BigQuery; no es requisito de cierre.
-- [ ] Actualizar las guías de ejecución, validación y Power BI con ambos circuitos: práctica local y extensión cloud.
+- [x] Publicar el reporte en Power BI Service, configurar credenciales Google y verificar una actualización manual completada (02/11/2026).
+- [ ] Configurar la identidad de Microsoft Entra y verificar el refresh automático al finalizar el pipeline validado. Implementado en `codex/powerbi-after-bigquery`; activación pendiente de recuperar MFA.
+- [x] Documentar actualización manual en Desktop y Service. Un warehouse actualizado no actualiza por sí solo el `.pbix` local.
+- [x] Actualizar las guías de ejecución, validación y Power BI con ambos circuitos: práctica local y extensión cloud.
 - [ ] Observar al menos siete ejecuciones diarias consecutivas y revisar el consumo real.
 
 **Limitación inicial aceptada:** `dbt build` no es una transacción de todo el warehouse; si falla, algunas tablas pueden haberse actualizado. Con Power BI Import, no refrescar tras un fallo conserva la última copia importada. Evitar refreshes independientes durante la construcción y reconstruir antes de reintentar. La publicación atómica de múltiples tablas queda fuera del alcance inicial.
 
 **Criterio de cierre:** datos diarios visibles en las cinco páginas, resultados conciliados, recuperación probada y consumo dentro del presupuesto acordado.
+
+**Revisión del 02/11/2026:** entrega local terminada y consumo cloud operativo con
+refresh manual. La automatización completa y los controles operativos pendientes
+no se consideran cerrados. Ver [ESTADO_PROYECTO.md](ESTADO_PROYECTO.md).
+Looker Studio continúa como alternativa opcional; no se necesita para esta entrega.
 
 ## Fuera del alcance inicial
 

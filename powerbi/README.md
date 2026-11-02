@@ -1,6 +1,6 @@
 # Dashboard EcoBottle AR — Power BI Desktop
 
-**Extensión BigQuery:** ver [`BIGQUERY.md`](BIGQUERY.md) para generar una copia cloud separada del proyecto y completar conexión, publicación y refresh programado. El dashboard CSV original se conserva.
+**Extensión BigQuery:** la [entrega conectada y publicada](bigquery/README.md) conserva actualización manual verificada. Ver [`BIGQUERY.md`](BIGQUERY.md) para generar una copia cloud nueva con parámetros y medidas de frescura, y [`../cloud/POWERBI.md`](../cloud/POWERBI.md) para el refresh condicionado al éxito del pipeline, pendiente de habilitación. El dashboard CSV original se conserva.
 
 ## Reporte entregado
 

@@ -1,10 +1,18 @@
 # Power BI + BigQuery: preparación y pasos manuales
 
+**Estado al integrar las ramas (02/11/2026):** ya existe una entrega conectada,
+publicada en el workspace `EcoBottle AR` y con refresh manual verificado; ver
+[`bigquery/README.md`](bigquery/README.md). Esta guía describe cómo generar y
+validar otra copia con parámetros y medidas de frescura. El generador no
+sobrescribe el PBIX entregado. La actualización automática al terminar Actions
+está implementada en [`../cloud/POWERBI.md`](../cloud/POWERBI.md), pero sigue
+deshabilitada hasta recuperar MFA y configurar la identidad de Microsoft Entra.
+
 ## Preparado en el repositorio
 
 `build_bigquery_project.py` copia el proyecto editable existente a una carpeta separada y cambia sus diez fuentes CSV por el conector Google BigQuery, en modo Import. Conserva columnas, medidas, 16 relaciones y las cinco páginas; agrega medidas de frescura y elimina el texto de corte histórico fijo. No modifica el `.pbix` ni el proyecto CSV y rechaza sobrescribir una carpeta existente.
 
-El resultado es **un proyecto preparado, no un reporte conectado y validado**: no contiene datos importados ni credenciales. Python no ejecuta Power Query ni puede certificar su actualización en Desktop o Service. No se ha publicado ni activado ningún refresh desde este entorno.
+El resultado del generador es **un proyecto preparado, no un reporte conectado y validado**: no contiene datos importados ni credenciales. Python no ejecuta Power Query ni puede certificar su actualización en Desktop o Service. La entrega existente de `bigquery/` sí se conectó y publicó mediante Desktop y la web; un proyecto recién generado debe repetir esos controles.
 
 ## 1. Accesos y proyecto (manual)
 
@@ -36,13 +44,13 @@ Salida: `powerbi/.build/bigquery/EcoBottle_AR_BigQuery.pbip`. `.build/` está ig
 
 ## 4. Publicar y programar (manual)
 
-1. Publicar la copia cloud en **Mi área de trabajo** de Power BI Service.
+1. Publicar la copia cloud en el workspace **EcoBottle AR** si va a utilizarse el refresh por API con la aplicación. **Mi área de trabajo** puede usarse para una copia personal manual, pero no es el destino de la automatización documentada en `cloud/POWERBI.md`.
 2. En la configuración del **modelo semántico**, configurar la conexión cloud Google BigQuery y sus credenciales OAuth. Las credenciales Desktop no bastan para Service. Si solo quedan estas consultas cloud y la tabla constante, normalmente no hace falta un gateway local.
 3. Ejecutar **Actualizar ahora** y comprobar el historial, los totales y las tarjetas desde el navegador.
-4. Configurar una actualización diaria con zona horaria explícita, después del horario habitual del pipeline. Actions se programa a las **03:17 Argentina** y tiene timeout de 90 minutos; **06:00 Argentina** es una opción inicial con margen, no una garantía de dependencia.
+4. Para actualizar al finalizar Actions, seguir `cloud/POWERBI.md` y verificar el job posterior `powerbi`. Mientras siga pendiente la identidad Entra, usar **Actualizar ahora** después de comprobar el éxito del pipeline. Un horario independiente es una alternativa opcional, no el disparador solicitado; Actions corre a las **03:17 Argentina**.
 5. Habilitar avisos de error y revisar también las notificaciones de Actions. Cerrar Desktop/apagar la computadora y verificar que Service actualiza sin ella.
 
-**Limitación importante:** el horario de Service es independiente de Actions. Puede refrescar datos atrasados o tablas parcialmente reconstruidas si dbt falla; no se ha implementado un bloqueo por éxito. Si falla el pipeline, desactivar/posponer el refresh del modelo hasta reconstruir y conciliar. Mostrar frescura y revisar ambos historiales. Una automatización estricta “solo tras éxito” queda pendiente de verificar acceso API y políticas de la universidad; no guardar un token personal permanente en Actions como atajo.
+**Limitación importante:** un horario de Service independiente de Actions puede refrescar datos atrasados o tablas parcialmente reconstruidas si dbt falla. El job de refresh por API de esta rama depende del éxito de la carga y los controles, pero aún no está habilitado ni probado contra el servicio. Hasta completar esa configuración, comprobar el éxito del pipeline antes del refresh manual. No guardar un token personal permanente en Actions como atajo.
 
 ## Pendientes manuales / criterio de aceptación
 
