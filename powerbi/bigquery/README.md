@@ -46,8 +46,13 @@ correctamente el 02/11/2026 (11:27:07 según la interfaz de Power BI).
 La actualización automática todavía no está configurada. El usuario solicitó
 dispararla al finalizar la carga nocturna de BigQuery, sin un horario fijo.
 El pipeline identificado es `.github/workflows/bigquery.yml` de este repositorio.
-El job posterior `powerbi` y su script están preparados localmente; configuración
+El job posterior `powerbi` y su script están subidos a `codex/powerbi-after-bigquery`; configuración
 y aceptación pendientes documentadas en [cloud/POWERBI.md](../../cloud/POWERBI.md).
+
+Mientras se recupera el acceso MFA a Microsoft Entra, actualizar manualmente
+el **modelo semántico EcoBottle_AR → Actualizar ahora** en el área de trabajo.
+Comprobar que el historial termine en **Completado**. Esto no ejecuta la carga
+de BigQuery ni modifica el PBIX local.
 
 La conexión en Desktop permite actualizar manualmente. Para ejecutar sin abrir
 Desktop, publicar en Power BI Service y configurar el modelo semántico:

@@ -12,8 +12,9 @@ diarias. La concurrencia existente serializa carga y actualización del modelo.
 
 ## Estado y configuración pendiente
 
-Implementación local preparada y probada sin conexión. Todavía no está subida,
-habilitada ni verificada con una ejecución real de Power BI Service.
+Implementación probada sin conexión y subida a la rama
+`codex/powerbi-after-bigquery` (commit `943f4f1`). Todavía no está integrada en
+`main`, habilitada ni verificada mediante una ejecución automática real.
 
 Avance del 02/11/2026: prueba de Power BI activada con autorización del usuario
 (el servicio indica regreso a licencia gratuita el 01/01/2027). Workspace
@@ -26,8 +27,10 @@ Avance del 02/11/2026: prueba de Power BI activada con autorización del usuario
   del 02/11/2026 completada correctamente: el servicio indica última actualización
   correcta a las 11:27:07, según la hora mostrada en su interfaz.
 - Pendiente: identidad federada Entra, permisos, integración y activación del job.
-- Microsoft Entra solicita verificación de Authenticator para acceder al portal;
-  ese inicio de sesión queda a cargo del propietario.
+- Microsoft Entra solicita verificación de Authenticator para acceder al portal.
+  El usuario informó que perdió el dispositivo; la recuperación MFA queda
+  pendiente con el soporte de su institución. El refresh manual del modelo ya
+  funciona con la sesión de Power BI y las credenciales Google actuales.
 
 [Abrir reporte publicado](https://app.powerbi.com/groups/bb832d0d-c96f-4b2f-b6a5-83de54073a14/reports/5d15139a-8010-47d5-8142-f594f9c46f8b?experience=power-bi).
 
