@@ -1,5 +1,7 @@
 # Dashboard EcoBottle AR — Power BI Desktop
 
+**Extensión BigQuery:** la [entrega conectada y publicada](bigquery/README.md) conserva actualización manual verificada. Ver [`BIGQUERY.md`](BIGQUERY.md) para generar una copia cloud nueva con parámetros y medidas de frescura, y [`../cloud/POWERBI.md`](../cloud/POWERBI.md) para el refresh condicionado al éxito del pipeline, pendiente de habilitación. El dashboard CSV original se conserva.
+
 ## Reporte entregado
 
 Abrí [`EcoBottle_AR.pbix`](EcoBottle_AR.pbix) en Power BI Desktop. Incluye las cinco páginas y los datos importados. Los controles realizados y las reglas de actualización están en [`ENTREGA.md`](ENTREGA.md). También se conserva el proyecto editable [`EcoBottle_AR.pbip`](EcoBottle_AR.pbip), con sus carpetas `.Report` y `.SemanticModel`.

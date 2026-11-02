@@ -82,12 +82,16 @@ y [API de actualización de Power BI](https://learn.microsoft.com/en-us/rest/api
 
 ## Regeneración
 
-Con este proyecto cerrado en Desktop, ejecutar desde la raíz del repositorio:
+El generador parametrizable integrado desde `main` crea una copia nueva. No
+sobrescribe esta entrega ni los archivos publicados. Desde la raíz del repositorio:
 
 ```powershell
-python powerbi/build_bigquery_project.py
+python powerbi/build_bigquery_project.py --project marketing-513302 --out powerbi/.build/bigquery-nuevo
 ```
 
-El generador vuelve a copiar el diseño del proyecto original y sustituye sus
-consultas CSV por consultas BigQuery. Sobrescribe las definiciones de esta
-variante; conservar antes cualquier cambio propio en sus páginas o medidas.
+La salida es `EcoBottle_AR_BigQuery.pbip`, en una carpeta que no debe existir.
+Conserva el diseño original, parametriza los proyectos de datos y facturación
+y agrega `refresh_info` y tres medidas de frescura (once tablas y veinte medidas
+en esa copia nueva). La entrega ya validada en esta carpeta conserva sus diez
+tablas y diecisiete medidas. Ver [BIGQUERY.md](../BIGQUERY.md) para autenticar,
+validar y guardar un PBIX nuevo antes de reemplazar una entrega.

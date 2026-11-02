@@ -153,6 +153,10 @@ Las franquicias publicadas de BigQuery incluyen 10 GiB de almacenamiento y 1 TiB
 
 **Objetivo:** conservar el dashboard, cambiando su fuente de CSV a BigQuery.
 
+**Generador integrado:** [`powerbi/build_bigquery_project.py`](powerbi/build_bigquery_project.py) conserva la versión parametrizable de `main`, rechaza sobrescrituras y agrega medidas de frescura. Sus tests offline verifican estructura y preservación del reporte; no ejecutan Power Query. Los artefactos ya publicados de `powerbi/bigquery/` se conservan como una entrega validada separada y no se regeneran durante esta integración.
+
+**Estado manual verificado:** seguir [`powerbi/bigquery/README.md`](powerbi/bigquery/README.md) para la entrega publicada y [`powerbi/BIGQUERY.md`](powerbi/BIGQUERY.md) para generar otra copia. La conexión Desktop, publicación en `EcoBottle AR` y actualización manual de Service están comprobadas. Quedan pendientes las tarjetas de frescura, la evidencia de conciliación cloud y las siete ejecuciones. El refresh condicionado al éxito ya está implementado; su habilitación requiere recuperar MFA y configurar la identidad de Microsoft Entra, según [`cloud/POWERBI.md`](cloud/POWERBI.md).
+
 - [x] Sustituir `RutaDW` / importación CSV por el conector de BigQuery en modo Import, con proyecto explícito y permisos de lectura/consulta necesarios.
 - [x] Revisar tipos monetarios, fechas, relaciones, medidas y visualización de las cinco páginas en la variante BigQuery.
 - [ ] Completar la evidencia de conciliación independiente de las cinco páginas contra los KPIs del warehouse cloud con el mismo corte.
