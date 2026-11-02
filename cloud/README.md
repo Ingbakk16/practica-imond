@@ -1,6 +1,6 @@
 # BigQuery con dbt: histórico y lotes diarios
 
-Este circuito agrega una ejecución cloud sin reemplazar la práctica local. Genera la base original con semilla 42, valida los CSV, carga las 13 fuentes una sola vez y construye las seis dimensiones y cuatro hechos con dbt Core. Admite lotes diarios manuales y una programación opt-in (ver fase 4 abajo); no actualiza Power BI todavía.
+Este circuito agrega una ejecución cloud sin reemplazar la práctica local. Genera la base original con semilla 42, valida los CSV, carga las 13 fuentes una sola vez y construye las seis dimensiones y cuatro hechos con dbt Core. Admite lotes diarios manuales y una programación opt-in (ver fase 4 abajo). La actualización posterior de Power BI también es opt-in y requiere configurar el modelo publicado y la identidad de Microsoft; ver [POWERBI.md](POWERBI.md).
 
 ## 1. Preparar el proyecto una sola vez
 

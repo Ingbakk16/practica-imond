@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "EcoBottle_AR"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "36556048-8e81-46ca-ab43-24706904e99a"
+  }
+}
