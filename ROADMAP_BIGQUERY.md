@@ -153,6 +153,10 @@ Las franquicias publicadas de BigQuery incluyen 10 GiB de almacenamiento y 1 TiB
 
 **Objetivo:** conservar el dashboard, cambiando su fuente de CSV a BigQuery.
 
+**Preparación implementada:** [`powerbi/build_bigquery_project.py`](powerbi/build_bigquery_project.py) genera una copia PBIP separada con las diez fuentes BigQuery Import, el contrato de tipos original, las 16 relaciones, medidas y cinco páginas existentes; agrega medidas de frescura. Los tests offline verifican estructura y preservación del reporte, no ejecutan Power Query ni certifican conectividad. No se modifica el dashboard CSV ni se publica o programa Power BI desde este entorno.
+
+**Plan manual pendiente:** seguir [`powerbi/BIGQUERY.md`](powerbi/BIGQUERY.md). Confirmar IDs/permisos GCP; generar la copia con IDs reales; autenticar y validar en Desktop; agregar tarjetas de frescura; guardar el `.pbix` cloud separado; publicar en Mi área de trabajo; configurar credenciales y refresh en Service; comprobar siete actualizaciones sin Desktop abierto. La cuenta gratuita universitaria requiere confirmar las funciones y políticas disponibles. El refresh inicial es por horario independiente; condicionarlo al éxito de Actions requiere evaluar API y permisos adicionales.
+
 - [ ] Sustituir `RutaDW` / importación CSV por el conector de BigQuery en modo Import, con proyecto explícito y permisos de lectura/consulta necesarios.
 - [ ] Revisar tipos monetarios, fechas, relaciones y medidas; conciliar las cinco páginas contra los KPIs del warehouse.
 - [ ] Mostrar fecha de datos y última actualización exitosa.
