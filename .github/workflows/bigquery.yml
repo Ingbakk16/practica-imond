@@ -196,10 +196,17 @@ jobs:
           git diff --exit-code HEAD -- raw/
           test -z "$(git ls-files --others --exclude-standard -- raw/)"
 
+      - name: Publish validated sources for Looker Studio
+        id: looker_publication
+        if: ${{ success() && vars.LOOKER_PUBLISH_ENABLED == 'true' }}
+        run: |
+          python cloud/publish_looker.py 2>&1 | tee "$LOG_DIR/looker-publication.log"
+
       - name: Write cloud summary
         if: ${{ always() && !cancelled() }}
         env:
           RESULT: ${{ job.status }}
+          LOOKER_PUBLICATION: ${{ steps.looker_publication.outcome }}
         run: |
           mkdir -p "$RUNNER_TEMP/bigquery-logs"
           cat > "$RUNNER_TEMP/bigquery-logs/summary.md" <<EOF
@@ -213,6 +220,8 @@ jobs:
           Event: ${{ github.event_name }}
           Daily dates: $(tr '\n' ' ' < "$DAILY_DATES" 2>/dev/null || true)
           Power BI refresh runs in the downstream job when POWERBI_REFRESH_ENABLED=true.
+          Looker sources publish after validation when LOOKER_PUBLISH_ENABLED=true; see lookerstudio/README.md.
+          Looker publication result: $LOOKER_PUBLICATION
           EOF
           cat "$RUNNER_TEMP/bigquery-logs/summary.md" >> "$GITHUB_STEP_SUMMARY"
 
