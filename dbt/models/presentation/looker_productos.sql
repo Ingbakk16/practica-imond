@@ -1,4 +1,3 @@
--- One row per item. Revenue excludes VAT and shipping, unlike looker_ventas.
 select
     i.order_item_id, i.order_id, date(o.order_date) as fecha,
     ch.code as canal, p.name as provincia, s.name as tienda,

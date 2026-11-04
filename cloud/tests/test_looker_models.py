@@ -1,5 +1,3 @@
-"""Execute presentation SQL against the historical warehouse entirely in memory."""
-
 from decimal import Decimal
 from pathlib import Path
 import sys
@@ -26,7 +24,7 @@ class LookerModelTests(unittest.TestCase):
         )
         for select in parse_one(sql, read="bigquery").find_all(exp.Select):
             if select.args.get("where"):
-                self.assertIsNotNone(select.args.get("from_"), "BigQuery requires FROM when using WHERE")
+                self.assertIsNotNone(select.args.get("from_"))
 
     @classmethod
     def setUpClass(cls):

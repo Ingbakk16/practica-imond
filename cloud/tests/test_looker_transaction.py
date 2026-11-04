@@ -1,5 +1,3 @@
-"""Exercise publication DML/guards in DuckDB; BigQuery acceptance remains separate."""
-
 from pathlib import Path
 import re
 import sys
@@ -14,8 +12,6 @@ from publish_looker import SOURCES, publication_sql
 
 def portable_publication():
     sql = publication_sql("demo-project").replace("@publication_id", "'new-publication'")
-    # ASSERT is BigQuery scripting, not supported by sqlglot's parser. Preserve
-    # its predicate as an executable fail-closed expression for this local test.
     sql = re.sub(
         r"ASSERT (.*?) AS 'Every daily batch[^']*';",
         r"SELECT CASE WHEN \1 THEN 1 ELSE ERROR('Unvalidated batch') END;",
@@ -91,7 +87,6 @@ class LookerTransactionTests(unittest.TestCase):
                     [validation],
                 )
             if validation == "sha":
-                # More than one validation record is ambiguous, even if one matches.
                 self.con.execute("insert into ecobottle_ops.daily_validations values ('2026-11-02', 'sha', current_timestamp)")
             with self.assertRaises(duckdb.Error):
                 self.con.execute(self.sql)

@@ -1,5 +1,3 @@
-"""Publication guards and workflow ordering; no Google credentials or writes."""
-
 from datetime import datetime, timedelta, timezone
 import json
 from pathlib import Path

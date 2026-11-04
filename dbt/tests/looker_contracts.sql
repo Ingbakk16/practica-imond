@@ -1,4 +1,3 @@
--- Conservation checks catch both fanout and row loss in presentation joins.
 select 'ventas' as control
 from (select 1) as singleton
 where (select count(*) from {{ ref('looker_ventas') }}) <> (select count(*) from {{ ref('fact_sales_order') }})

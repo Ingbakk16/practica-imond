@@ -20,7 +20,6 @@ on:
         type: number
         default: 100
   schedule:
-    # 06:17 UTC = 03:17 Argentina (UTC-3); process the prior local business day.
     - cron: '17 6 * * *'
 
 permissions:
@@ -44,7 +43,7 @@ jobs:
       id-token: write
     defaults:
       run:
-        shell: bash # GitHub runs explicit bash with -e -o pipefail; tee must not mask failures.
+        shell: bash
     env:
       PYTHONUNBUFFERED: "1"
       GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
@@ -68,7 +67,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/bigquery-logs"
           for name in GCP_PROJECT_ID WIF_PROVIDER SERVICE_ACCOUNT; do
             if [[ -z "${!name}" ]]; then
-              echo "Missing GitHub environment variable: $name. See cloud/README.md."
+              echo "Missing GitHub environment variable: $name."
               exit 1
             fi
           done

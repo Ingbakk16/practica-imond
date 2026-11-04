@@ -1,4 +1,3 @@
--- One row per response, not per order. No customer text is published.
 select
     n.nps_id, date(n.responded_at) as fecha, ch.code as canal, n.score as puntaje,
     1 as respuestas,

@@ -1,4 +1,3 @@
--- One row per order. Do not join this source to order items in the report.
 select
     o.order_id, date(o.order_date) as fecha, o.customer_key,
     ch.code as canal, p.name as provincia, s.name as tienda,

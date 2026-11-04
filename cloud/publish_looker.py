@@ -1,9 +1,4 @@
 #!/usr/bin/env python3
-"""Publish the last validated build for Looker Studio, with atomic data replacement.
-
-Run only after dbt build AND historical/daily reconciliation. This command does
-not create datasets, change IAM, or authenticate on behalf of report viewers.
-"""
 
 import argparse
 from datetime import datetime, timedelta, timezone
@@ -48,7 +43,6 @@ STATUS_SCHEMA = [
 
 
 def check_build(path, now=None):
-    """Fail closed on missing/stale/failed dbt artifacts, before any cloud write."""
     artifact = json.loads(Path(path).read_text())
     generated = datetime.fromisoformat(artifact["metadata"]["generated_at"].replace("Z", "+00:00"))
     now = now or datetime.now(timezone.utc)
@@ -68,7 +62,6 @@ def schema_signature(schema):
 
 
 def publication_sql(project):
-    """All four datasets of rows and their freshness metadata commit together."""
     ops = f"{project}.ecobottle_ops"
     target = f"{project}.ecobottle_looker"
     statements = [f"""
@@ -104,8 +97,6 @@ FROM `{candidate}`;
 def publish(config, run_results):
     check_build(run_results)
     client = config.client()
-    # Provision explicitly outside the transaction: BigQuery doesn't allow
-    # permanent table DDL within it. Existing data is never cleared here.
     for dataset in ("ecobottle_analytics", "ecobottle_looker", "ecobottle_ops"):
         if client.get_dataset(f"{config.project}.{dataset}").location.upper() != config.location.upper():
             raise ValueError(f"Dataset {dataset} must be in {config.location}")
@@ -116,7 +107,6 @@ def publish(config, run_results):
             raise ValueError(f"Unexpected candidate columns: {name}; migrate the contract explicitly")
         schemas[name] = [*table.schema, *PUBLICATION_FIELDS]
     schemas["actualizacion"] = STATUS_SCHEMA
-    # Check every existing target before issuing any CREATE. No schema autodrift.
     existing = {table.table_id for table in client.list_tables(f"{config.project}.ecobottle_looker")}
     for name, schema in schemas.items():
         if name in existing:
@@ -134,7 +124,7 @@ def publish(config, run_results):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser()
     parser.add_argument("--run-results", default="dbt/target/run_results.json")
     args = parser.parse_args()
     publish(Config.from_env(), args.run_results)
