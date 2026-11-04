@@ -7,7 +7,7 @@ import unittest
 
 import duckdb
 from jinja2 import Environment
-from sqlglot import transpile
+from sqlglot import exp, parse_one, transpile
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
@@ -20,6 +20,14 @@ def render(path):
 
 
 class LookerModelTests(unittest.TestCase):
+    def test_bigquery_where_clauses_have_a_from_source(self):
+        sql = Environment().from_string((ROOT / "dbt/tests/looker_contracts.sql").read_text()).render(
+            ref=lambda name: f'`{name}`'
+        )
+        for select in parse_one(sql, read="bigquery").find_all(exp.Select):
+            if select.args.get("where"):
+                self.assertIsNotNone(select.args.get("from_"), "BigQuery requires FROM when using WHERE")
+
     @classmethod
     def setUpClass(cls):
         cls.con = duckdb.connect(":memory:")
