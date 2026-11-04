@@ -83,4 +83,4 @@ Para configurar o ejecutar el circuito cloud, seguir la [guía de BigQuery y dbt
 - [Estado verificado](ESTADO_PROYECTO.md) y [plan de cierre](PLAN_CIERRE.md).
 - [Registro de operación y consumo](lookerstudio/OPERACION.md).
 
-La entrega funcional fue validada el 4 de noviembre de 2026, incluida la lectura pública y la reejecución de un lote sin duplicación. Queda observar siete ejecuciones programadas para completar la comprobación de continuidad. Los límites de consumo actuales se mantienen por decisión del propietario.
+
