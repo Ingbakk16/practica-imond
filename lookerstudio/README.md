@@ -4,11 +4,18 @@ La carga diaria existente se conserva. dbt construye cuatro fuentes de presentac
 y `cloud/publish_looker.py` publica una copia validada para el reporte. No se
 importan CSV en Looker ni se necesita Power BI Service.
 
-**Estado:** código y comprobaciones offline implementados. La creación del dataset,
-la primera publicación cloud, la autorización del conector y la construcción y
-publicación del informe en Looker Studio requieren al propietario. **Todavía no
-hay un enlace al informe creado por este cambio.** El PBIX no se convierte
-automáticamente y no se modifica.
+**Estado revisado el 04/11/2026:** dataset publicado y cinco fuentes BigQuery
+conectadas al [informe EcoBottle AR — Reporte comercial](https://datastudio.google.com/u/0/reporting/dfabaac0-911f-4735-b1b9-52733368cff9/page/93oCG).
+El informe tiene cinco páginas y tema Eucalipto. Se conciliaron los principales
+KPIs históricos en la interfaz. Las visualizaciones que no cargaban en el
+navegador integrado se reemplazaron por tablas con barras y valores visibles.
+Ver [estado y pendientes de la revisión](../ESTADO_PROYECTO.md): el ranking SQL,
+algunos controles de la guía y la prueba de acceso externo siguen pendientes.
+La publicación existente no demuestra por sí sola que el schedule siga activo;
+no se inspeccionaron IAM ni las variables de GitHub. El PBIX no se modifica.
+
+Las secciones siguientes son la guía de configuración y el diseño objetivo,
+no una certificación de que cada paso se haya ejecutado en esta revisión.
 
 ## 1. Activar la publicación una sola vez
 
