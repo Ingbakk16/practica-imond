@@ -62,11 +62,6 @@ jobs:
         run: |
           python -m unittest discover -s generator/tests -v 2>&1 | tee "$LOG_DIR/daily-tests.log"
 
-      - name: Test Power BI BigQuery project preparation
-        id: powerbi_tests
-        run: |
-          python -m unittest discover -s powerbi/tests -v 2>&1 | tee "$LOG_DIR/powerbi-tests.log"
-
       - name: Install cloud dependencies for offline checks
         id: cloud_install
         run: |
@@ -119,7 +114,6 @@ jobs:
           GENERATED_VALIDATION: ${{ steps.generated_validation.outcome }}
           SOURCE_VALIDATION: ${{ steps.source_validation.outcome }}
           DAILY_TESTS: ${{ steps.daily_tests.outcome }}
-          POWERBI_TESTS: ${{ steps.powerbi_tests.outcome }}
           CLOUD_INSTALL: ${{ steps.cloud_install.outcome }}
           CLOUD_TESTS: ${{ steps.cloud_tests.outcome }}
           DBT_PARSE: ${{ steps.dbt_parse.outcome }}
@@ -138,7 +132,6 @@ jobs:
           | Generated data validation | $GENERATED_VALIDATION |
           | Committed source validation | $SOURCE_VALIDATION |
           | Daily generation tests (offline) | $DAILY_TESTS |
-          | Power BI BigQuery project preparation (offline) | $POWERBI_TESTS |
           | Cloud dependency installation | $CLOUD_INSTALL |
           | Cloud loader tests (offline) | $CLOUD_TESTS |
           | dbt parse (offline) | $DBT_PARSE |

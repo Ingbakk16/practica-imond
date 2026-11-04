@@ -2,11 +2,11 @@
 
 Este repositorio tiene los datos de **EcoBottle AR** para la práctica.
 
-**Dashboard:** [`powerbi/EcoBottle_AR.pbix`](powerbi/EcoBottle_AR.pbix), con cinco páginas, modelo y datos importados. Ver los [controles de la entrega](powerbi/ENTREGA.md) y la [guía de actualización](powerbi/README.md).
+**Entrega final: Looker Studio**, conectado a fuentes BigQuery publicadas después de dbt y las conciliaciones. [Abrir EcoBottle AR — Reporte comercial](https://datastudio.google.com/u/0/reporting/dfabaac0-911f-4735-b1b9-52733368cff9/page/93oCG). Incluye Resumen, Ventas, Clientes, Satisfacción y Adquisición web.
 
-**Alternativa web:** [BigQuery → Looker Studio](lookerstudio/README.md), con fuentes publicadas después de validar el pipeline diario, métricas y guía para crear y compartir las cinco páginas.
+Ver el [plan de cierre](PLAN_CIERRE.md), el [estado verificado](ESTADO_PROYECTO.md) y la [guía del informe](lookerstudio/README.md).
 
-**Versión BigQuery:** [`powerbi/bigquery/EcoBottle_AR.pbix`](powerbi/bigquery/EcoBottle_AR.pbix), también publicada en Power BI Service con actualización manual verificada. La automatización del refresh sigue pendiente de acceso a Microsoft Entra. Ver el [estado del proyecto y la revisión de cierre](ESTADO_PROYECTO.md).
+Power BI queda como antecedente histórico en `powerbi/`; fue reemplazado por Looker Studio y ya no requiere MFA, licencias ni refresh para cerrar la entrega.
 
 - **Consigna:** [Práctica](https://docs.google.com/document/d/15RNP3FVqLjO4jzh80AAkK6mUR5DOLqPxLjQxqvdzrYg/edit?usp=sharing)
 - **Diagrama de las tablas de origen (DER):** [ver más abajo](#diagrama-de-las-tablas-de-origen-der)

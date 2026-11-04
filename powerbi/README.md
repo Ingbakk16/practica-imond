@@ -1,3 +1,9 @@
+# Archivo histórico — Power BI
+
+Desde el 04/11/2026, Looker Studio es la entrega final. Esta carpeta conserva
+los reportes y herramientas anteriores. No requiere publicación ni refresh
+para cerrar el proyecto.
+
 # Dashboard EcoBottle AR — Power BI Desktop
 
 **Extensión BigQuery:** la [entrega conectada y publicada](bigquery/README.md) conserva actualización manual verificada. Ver [`BIGQUERY.md`](BIGQUERY.md) para generar una copia cloud nueva con parámetros y medidas de frescura, y [`../cloud/POWERBI.md`](../cloud/POWERBI.md) para el refresh condicionado al éxito del pipeline, pendiente de habilitación. El dashboard CSV original se conserva.

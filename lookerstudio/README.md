@@ -1,5 +1,9 @@
 # EcoBottle AR — BigQuery → Looker Studio
 
+**Entrega oficial desde el 04/11/2026:** Looker Studio reemplaza Power BI.
+El [plan de cierre](../PLAN_CIERRE.md) concentra los criterios y la evidencia.
+No se necesita recuperar MFA de Microsoft ni habilitar refresh de Power BI.
+
 La carga diaria existente se conserva. dbt construye cuatro fuentes de presentación
 y `cloud/publish_looker.py` publica una copia validada para el reporte. No se
 importan CSV en Looker ni se necesita Power BI Service.
@@ -9,10 +13,13 @@ conectadas al [informe EcoBottle AR — Reporte comercial](https://datastudio.go
 El informe tiene cinco páginas y tema Eucalipto. Se conciliaron los principales
 KPIs históricos en la interfaz. Las visualizaciones que no cargaban en el
 navegador integrado se reemplazaron por tablas con barras y valores visibles.
-Ver [estado y pendientes de la revisión](../ESTADO_PROYECTO.md): el ranking SQL,
-algunos controles de la guía y la prueba de acceso externo siguen pendientes.
-La publicación existente no demuestra por sí sola que el schedule siga activo;
-no se inspeccionaron IAM ni las variables de GitHub. El PBIX no se modifica.
+La revisión de cierre incorporó ranking SQL, controles agrupados de Ventas y
+Clientes, detalle de productos y acceso Público — Lector. Ver la [evidencia y
+los pendientes operativos](../ESTADO_PROYECTO.md).
+En la revisión de cierre se observó el schedule activo y fallido del 04/11
+([run #21](https://github.com/Ingbakk16/practica-imond/actions/runs/41849903528)).
+La publicación visible conserva el lote 02/11; todavía no acredita continuidad.
+No se inspeccionaron IAM ni las variables privadas de GitHub.
 
 Las secciones siguientes son la guía de configuración y el diseño objetivo,
 no una certificación de que cada paso se haya ejecutado en esta revisión.
@@ -42,6 +49,24 @@ Ejecutar **Actions → Build BigQuery warehouse → Run workflow** con `daily_da
 vacío: reconstruye con todo el origen ya cargado, incluido el diario existente;
 no genera un día adicional. Comprobar el paso **Publish validated sources for
 Looker Studio** y `looker-publication.log` en el artifact `bigquery-diagnostics`.
+
+El workflow revisado agrega **Verify published Looker delivery** después de la
+publicación. Valida los conteos y KPIs históricos de la copia publicada,
+identificadores y fechas de publicación coherentes, ausencia de lotes sin validar
+y concordancia de la marca de lote. En schedule exige el día anterior en
+Argentina. Revisar `looker-acceptance.json` y `looker-acceptance.log` en el mismo
+artifact. Un resultado omitido no equivale a una aceptación exitosa.
+
+La ventana de dos horas del verificador se aplica inmediatamente después de
+publicar. No es un monitor para ejecutar sobre una publicación antigua ni una
+promesa de ingesta cada dos horas. Para una verificación manual nueva:
+
+```bash
+python cloud/verify_looker.py --expected-date YYYY-MM-DD --out looker-acceptance.json
+```
+
+Usar la fecha real esperada para ese run; las ejecuciones manuales sin carga de
+días pueden omitir `--expected-date` y seguir conciliando histórico y publicación.
 
 En `ecobottle_looker` deben aparecer:
 

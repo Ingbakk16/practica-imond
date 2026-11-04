@@ -77,12 +77,10 @@ class RefreshTests(unittest.TestCase):
         self.assertNotIn("SECRET", str(error.exception))
         self.assertEqual(open_url.call_count, 1)
 
-    def test_workflow_refresh_depends_on_validated_build_and_opt_in(self):
+    def test_retired_refresh_is_never_called_by_the_workflow(self):
         workflow = (Path(__file__).resolve().parents[2] / ".github/workflows/bigquery.yml").read_text()
-        refresh_job = workflow.split("\n  powerbi:\n", 1)[1]
-        self.assertIn("needs: historical", refresh_job)
-        self.assertIn("needs.historical.result == 'success'", refresh_job)
-        self.assertIn("vars.POWERBI_REFRESH_ENABLED == 'true'", refresh_job)
+        self.assertNotIn("\n  powerbi:", workflow)
+        self.assertNotIn("refresh_powerbi.py", workflow)
 
 
 if __name__ == "__main__":

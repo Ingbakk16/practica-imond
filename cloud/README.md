@@ -1,8 +1,8 @@
 # BigQuery con dbt: histórico y lotes diarios
 
-**Visualización web sin Microsoft:** ver [`lookerstudio/README.md`](../lookerstudio/README.md). La publicación opcional `LOOKER_PUBLISH_ENABLED=true` se ejecuta después de las validaciones del workflow existente y conserva la última copia válida en `ecobottle_looker`. Requiere preparar ese dataset y crear el informe en Looker Studio.
+**Visualización final: Looker Studio.** Ver [`lookerstudio/README.md`](../lookerstudio/README.md). La publicación `LOOKER_PUBLISH_ENABLED=true` se ejecuta después de las validaciones del workflow y conserva la última copia válida en `ecobottle_looker`. El informe y el dataset ya existen; consultar [PLAN_CIERRE.md](../PLAN_CIERRE.md) antes de repetir pasos de aprovisionamiento.
 
-Este circuito agrega una ejecución cloud sin reemplazar la práctica local. Genera la base original con semilla 42, valida los CSV, carga las 13 fuentes una sola vez y construye las seis dimensiones y cuatro hechos con dbt Core. Admite lotes diarios manuales y una programación opt-in (ver fase 4 abajo). La actualización posterior de Power BI también es opt-in y requiere configurar el modelo publicado y la identidad de Microsoft; ver [POWERBI.md](POWERBI.md).
+Este circuito conserva la práctica local. Genera la base original con semilla 42, valida los CSV, carga las 13 fuentes una sola vez y construye las seis dimensiones y cuatro hechos con dbt Core. Admite lotes diarios manuales y programación (ver fase 4 abajo). Después publica Looker y ejecuta `verify_looker.py`: metadatos, KPIs históricos, validación de lotes y fecha esperada en runs programados. Power BI fue retirado del workflow; [POWERBI.md](POWERBI.md) se conserva como documentación histórica.
 
 ## 1. Preparar el proyecto una sola vez
 
@@ -199,3 +199,19 @@ El cron está **desactivado por defecto**: el job programado solo se ejecuta si 
 Cada ejecución consulta los días **validados** desde la fecha de inicio; recupera fechas faltantes y lotes que se cargaron pero fallaron antes de completar dbt y ambas conciliaciones. La tabla `ecobottle_ops.daily_validations` conserva el fingerprint y se escribe **después** de estos controles; `daily_batches.status = complete` solo acredita la carga de origen. Si faltan más de siete fechas, el workflow falla explícitamente, sin saltar ni cargar una selección parcial: recuperar por rangos manuales de hasta siete días y mantener los mismos parámetros para fechas ya cargadas. Un fallo de dbt después de cargar se recupera sin duplicar fuentes. Consultar logs por fecha en `bigquery-diagnostics` (retención de siete días); GitHub Actions puede retrasar u omitir cron, por eso no se asume ejecución puntual. Si hay fallos, no refrescar Power BI. No se configura refresh automático del reporte.
 
 **Antes de dar por cerrada la fase 4:** verificar que una fecha omitida se detecte, observar siete ejecuciones programadas, revisar consumo y configurar avisos de fallo de Actions. El usuario confirmó reejecuciones exitosas de fechas repetidas y de siete días consecutivos. Las pruebas de fallos inducidos durante la carga y antes de dbt se difieren por decisión del usuario; no se consideran aprobadas y la recuperación cloud sigue sin validarse ante esos fallos. La programación no debe activarse hasta que el propietario confirme los límites de costo. Seguir el [plan de puesta en marcha](../ROADMAP_BIGQUERY.md#plan-de-puesta-en-marcha-de-la-automatización), incluida la publicación en `main` antes de habilitar el cron.
+
+## Recuperación de un error interno de BigQuery
+
+El run programado #21 del 04/11/2026 falló en `looker_sesiones` con HTTP 500,
+`backendError`. El workflow revisado ejecuta `cloud/build_dbt.py` en las dos
+construcciones. Ante errores transitorios terminales vuelve a ejecutar el
+build completo, con nuevos jobs, hasta tres intentos y esperas de 15/30 segundos.
+No reintenta errores SQL, permisos ni tests fallidos. La ingesta no se repite
+dentro de estos reintentos y no se publica antes de validar.
+
+Se conserva el build completo porque `publish_looker.py` exige un
+`run_results.json` fresco con todos los modelos de presentación y sus controles.
+`dbt retry` parcial no satisface por sí solo ese contrato.
+
+Referencias: [reintentos de dbt BigQuery](https://docs.getdbt.com/docs/local/connect-data-platform/bigquery-setup?version=1.12)
+y [backendError de BigQuery](https://docs.cloud.google.com/bigquery/docs/error-messages).

@@ -131,9 +131,8 @@ jobs:
           python cloud/setup_daily.py 2>&1 | tee "$LOG_DIR/daily-schema.log"
 
       - name: Build and test BigQuery models
-        working-directory: dbt
         run: |
-          dbt build 2>&1 | tee "$LOG_DIR/dbt-build.log"
+          python cloud/build_dbt.py 2>&1 | tee "$LOG_DIR/dbt-build.log"
 
       - name: Reconcile BigQuery with DuckDB
         run: |
@@ -182,7 +181,7 @@ jobs:
         working-directory: dbt
         run: |
           if [[ -s "$DAILY_DATES" ]]; then
-            dbt build 2>&1 | tee "$LOG_DIR/daily-dbt-build.log"
+            python ../cloud/build_dbt.py --project-dir . 2>&1 | tee "$LOG_DIR/daily-dbt-build.log"
             python ../cloud/reconcile.py --database ../warehouse.duckdb 2>&1 | tee "$LOG_DIR/daily-historical-reconciliation.log"
             while IFS= read -r day; do
               python ../cloud/reconcile_daily.py --dir "$DAILY_RAW/$day" 2>&1 | tee "$LOG_DIR/daily-reconciliation-$day.log"
@@ -202,11 +201,25 @@ jobs:
         run: |
           python cloud/publish_looker.py 2>&1 | tee "$LOG_DIR/looker-publication.log"
 
+      - name: Verify published Looker delivery
+        id: looker_acceptance
+        if: ${{ success() && vars.LOOKER_PUBLISH_ENABLED == 'true' }}
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          args=()
+          if [[ "$EVENT_NAME" == schedule ]]; then
+            expected=$(python -c "from datetime import datetime, timedelta; from zoneinfo import ZoneInfo; print(datetime.now(ZoneInfo('America/Argentina/Buenos_Aires')).date() - timedelta(days=1))")
+            args+=(--expected-date "$expected")
+          fi
+          python cloud/verify_looker.py "${args[@]}" --out "$LOG_DIR/looker-acceptance.json" 2>&1 | tee "$LOG_DIR/looker-acceptance.log"
+
       - name: Write cloud summary
         if: ${{ always() && !cancelled() }}
         env:
           RESULT: ${{ job.status }}
           LOOKER_PUBLICATION: ${{ steps.looker_publication.outcome }}
+          LOOKER_ACCEPTANCE: ${{ steps.looker_acceptance.outcome }}
         run: |
           mkdir -p "$RUNNER_TEMP/bigquery-logs"
           cat > "$RUNNER_TEMP/bigquery-logs/summary.md" <<EOF
@@ -219,9 +232,10 @@ jobs:
           See bigquery-diagnostics for command logs and dbt results (7 days).
           Event: ${{ github.event_name }}
           Daily dates: $(tr '\n' ' ' < "$DAILY_DATES" 2>/dev/null || true)
-          Power BI refresh runs in the downstream job when POWERBI_REFRESH_ENABLED=true.
+          Final dashboard: Looker Studio (Power BI retired).
           Looker sources publish after validation when LOOKER_PUBLISH_ENABLED=true; see lookerstudio/README.md.
           Looker publication result: $LOOKER_PUBLICATION
+          Looker acceptance result: $LOOKER_ACCEPTANCE
           EOF
           cat "$RUNNER_TEMP/bigquery-logs/summary.md" >> "$GITHUB_STEP_SUMMARY"
 
@@ -236,43 +250,3 @@ jobs:
             dbt/target/run_results.json
           retention-days: 7
           if-no-files-found: warn
-
-  powerbi:
-    name: Refresh Power BI after validated BigQuery build
-    needs: historical
-    if: ${{ needs.historical.result == 'success' && vars.POWERBI_REFRESH_ENABLED == 'true' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 35
-    environment: bigquery
-    permissions:
-      contents: read
-      id-token: write
-    env:
-      PYTHONUNBUFFERED: "1"
-      POWERBI_TENANT_ID: ${{ vars.POWERBI_TENANT_ID }}
-      POWERBI_CLIENT_ID: ${{ vars.POWERBI_CLIENT_ID }}
-      POWERBI_WORKSPACE_ID: ${{ vars.POWERBI_WORKSPACE_ID }}
-      POWERBI_DATASET_ID: ${{ vars.POWERBI_DATASET_ID }}
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Set up Python
-        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
-        with:
-          python-version: "3.12"
-
-      - name: Refresh published model and wait for completion
-        id: refresh
-        run: python cloud/refresh_powerbi.py
-
-      - name: Write Power BI result
-        if: ${{ always() && !cancelled() }}
-        env:
-          REFRESH_OUTCOME: ${{ steps.refresh.outcome }}
-        run: |
-          echo "## Power BI after BigQuery" >> "$GITHUB_STEP_SUMMARY"
-          echo "Refresh result: $REFRESH_OUTCOME" >> "$GITHUB_STEP_SUMMARY"
-          echo "Success requires the submitted refresh to reach Completed." >> "$GITHUB_STEP_SUMMARY"

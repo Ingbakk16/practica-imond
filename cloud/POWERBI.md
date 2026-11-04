@@ -1,5 +1,10 @@
 # Actualizar Power BI al finalizar el pipeline
 
+> **Archivado el 04/11/2026.** Looker Studio reemplaza Power BI por decisión del
+> propietario. El job de refresh fue retirado del workflow. Los pasos siguientes
+> describen la implementación anterior; no son requisitos de entrega ni deben
+> habilitarse para cerrar este proyecto. Ver [PLAN_CIERRE.md](../PLAN_CIERRE.md).
+
 `bigquery.yml` incorpora el job `powerbi`, dependiente de `historical`. Solo se
 ejecuta después de una carga, dbt, conciliaciones y controles exitosos. Hace una
 sola solicitud de actualización y espera hasta 30 minutos a que esa misma
