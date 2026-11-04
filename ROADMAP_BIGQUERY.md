@@ -151,6 +151,15 @@ Las franquicias publicadas de BigQuery incluyen 10 GiB de almacenamiento y 1 TiB
 
 ## Fase 5 — Conectar Power BI y cerrar la entrega
 
+**Alternativa Looker Studio implementada en código (04/11/2026):**
+[`lookerstudio/README.md`](lookerstudio/README.md) describe las fuentes, métricas,
+cinco páginas y activación mediante `LOOKER_PUBLISH_ENABLED`. Reutiliza el cron
+y los lotes existentes; no depende del acceso MFA a Microsoft. A diferencia de
+Power BI Import, usa una copia de publicación transaccional para no consultar
+tablas candidatas a medio construir. Esa protección se limita a las fuentes
+Looker; no modifica la construcción del warehouse ni el circuito Power BI.
+La primera publicación en BigQuery y el informe compartido siguen pendientes.
+
 **Objetivo:** conservar el dashboard, cambiando su fuente de CSV a BigQuery.
 
 **Generador integrado:** [`powerbi/build_bigquery_project.py`](powerbi/build_bigquery_project.py) conserva la versión parametrizable de `main`, rechaza sobrescrituras y agrega medidas de frescura. Sus tests offline verifican estructura y preservación del reporte; no ejecutan Power Query. Los artefactos ya publicados de `powerbi/bigquery/` se conservan como una entrega validada separada y no se regeneran durante esta integración.

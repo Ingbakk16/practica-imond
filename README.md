@@ -4,6 +4,8 @@ Este repositorio tiene los datos de **EcoBottle AR** para la práctica.
 
 **Dashboard:** [`powerbi/EcoBottle_AR.pbix`](powerbi/EcoBottle_AR.pbix), con cinco páginas, modelo y datos importados. Ver los [controles de la entrega](powerbi/ENTREGA.md) y la [guía de actualización](powerbi/README.md).
 
+**Alternativa web:** [BigQuery → Looker Studio](lookerstudio/README.md), con fuentes publicadas después de validar el pipeline diario, métricas y guía para crear y compartir las cinco páginas.
+
 **Versión BigQuery:** [`powerbi/bigquery/EcoBottle_AR.pbix`](powerbi/bigquery/EcoBottle_AR.pbix), también publicada en Power BI Service con actualización manual verificada. La automatización del refresh sigue pendiente de acceso a Microsoft Entra. Ver el [estado del proyecto y la revisión de cierre](ESTADO_PROYECTO.md).
 
 - **Consigna:** [Práctica](https://docs.google.com/document/d/15RNP3FVqLjO4jzh80AAkK6mUR5DOLqPxLjQxqvdzrYg/edit?usp=sharing)

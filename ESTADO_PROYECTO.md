@@ -8,6 +8,21 @@ la identidad y sus permisos. No considerar el proyecto totalmente automatizado.
 
 ## Entregables vigentes
 
+**Ampliación Looker Studio (04/11/2026):** se implementaron cuatro modelos de
+presentación dbt y una publicación transaccional opt-in al final del pipeline
+diario existente. Ver [conexión y entrega web](lookerstudio/README.md). El log del
+03/11 aportado por el propietario confirma carga y validación programadas del
+lote 02/11 en `marketing-513302`. No se volvió a configurar ni activar el cron.
+La nueva publicación Looker aún requiere crear `ecobottle_looker`, conceder
+permisos y habilitar `LOOKER_PUBLISH_ENABLED`; la creación visual y el enlace del
+informe también están pendientes. Las comprobaciones de la revisión original
+de abajo se conservan como registro histórico, no como estado de esta ampliación.
+
+Verificación local de la ampliación: suite cloud (incluye modelos y rollback de
+publicación en DuckDB), siete tests del generador, dos tests de Power BI,
+`dbt parse` (25 modelos, 87 tests) y `actionlint` 1.7.12 sin ShellCheck aprobados.
+No se hicieron escrituras cloud, ni se crearon o compartieron informes desde este entorno.
+
 | Uso | Archivo o ubicación |
 |---|---|
 | Entrega histórica, sin servicios cloud | [powerbi/EcoBottle_AR.pbix](powerbi/EcoBottle_AR.pbix) |

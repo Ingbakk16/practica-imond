@@ -1,0 +1,30 @@
+version: 2
+models:
+  - name: looker_ventas
+    description: "Un pedido; ventas con IVA/envío. Solo claves anónimas de cliente, sin PII."
+    columns:
+      - name: order_id
+        tests: [unique, not_null]
+      - name: fecha
+        tests: [not_null]
+  - name: looker_productos
+    description: "Una línea; ventas sin IVA/envío. No sumar importes de pedidos aquí."
+    columns:
+      - name: order_item_id
+        tests: [unique, not_null]
+      - name: fecha
+        tests: [not_null]
+  - name: looker_sesiones
+    description: "Una sesión por fecha de inicio; anónimas no son personas únicas."
+    columns:
+      - name: session_id
+        tests: [unique, not_null]
+      - name: fecha
+        tests: [not_null]
+  - name: looker_nps
+    description: "Una respuesta por fecha de respuesta; NPS expresado en puntos."
+    columns:
+      - name: nps_id
+        tests: [unique, not_null]
+      - name: fecha
+        tests: [not_null]
