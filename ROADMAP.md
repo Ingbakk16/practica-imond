@@ -1,6 +1,6 @@
 # Roadmap de construcción
 
-Plan incremental para pasar de las tablas transaccionales al data warehouse y a un conjunto de KPIs listo para analizar en Power BI.
+Plan incremental para pasar de las tablas transaccionales al data warehouse y a un conjunto de KPIs listo para analizar en Looker Studio.
 
 ## Entrega vigente — 04/11/2026
 

@@ -6,8 +6,9 @@
 El [plan de cierre](PLAN_CIERRE.md) y el [estado verificado](ESTADO_PROYECTO.md)
 son la referencia vigente. Los avances y casillas de fases 0–4 de este documento
 conservan el historial de implementación; no deben leerse como verificación
-actual de configuración cloud. Se observó el schedule activo, con el run #21
-fallido el 04/11; su causa todavía requiere el log autenticado.
+actual de configuración cloud. El run #21 falló por un error interno 500 de
+BigQuery; la versión revisada se integró en main y el run #22 publicó y verificó
+el lote 03/11/2026. El informe tiene acceso Público — Lector probado en incógnito.
 
 ## Objetivo
 
@@ -166,9 +167,9 @@ Las franquicias publicadas de BigQuery incluyen 10 GiB de almacenamiento y 1 TiB
 - [x] Retirar el job Power BI y los requisitos de identidad Microsoft.
 - [x] Implementar verificación de la publicación en el workflow: metadatos,
   KPIs históricos, lotes validados y fecha esperada en schedule.
-- [ ] Resolver el fallo del run programado #21 y verificar un run de la versión revisada.
-- [ ] Incorporar ranking mensual y completar controles agrupados en el editor.
-- [ ] Probar lectura externa y guardar evidencia de conciliación con el mismo corte.
+- [x] Resolver el fallo del run programado #21 y verificar un run de la versión revisada.
+- [x] Incorporar ranking mensual y completar controles agrupados en el editor.
+- [x] Probar lectura externa y guardar evidencia de conciliación con el mismo corte.
 - [ ] Registrar continuidad diaria y consumo real durante siete ejecuciones.
 
 Ver [PLAN_CIERRE.md](PLAN_CIERRE.md) para pasos, comandos y criterios de aceptación.

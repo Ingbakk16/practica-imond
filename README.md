@@ -2,9 +2,14 @@
 
 Este repositorio tiene los datos de **EcoBottle AR** para la práctica.
 
-**Entrega final: Looker Studio**, conectado a fuentes BigQuery publicadas después de dbt y las conciliaciones. [Abrir EcoBottle AR — Reporte comercial](https://datastudio.google.com/u/0/reporting/dfabaac0-911f-4735-b1b9-52733368cff9/page/93oCG). Incluye Resumen, Ventas, Clientes, Satisfacción y Adquisición web.
+**Entrega final: Looker Studio**, conectado a fuentes BigQuery publicadas después de dbt y las conciliaciones. [Abrir EcoBottle AR — Reporte comercial](https://datastudio.google.com/reporting/dfabaac0-911f-4735-b1b9-52733368cff9/page/93oCG). Incluye Resumen, Ventas, Clientes, Satisfacción y Adquisición web.
 
 Ver el [plan de cierre](PLAN_CIERRE.md), el [estado verificado](ESTADO_PROYECTO.md) y la [guía del informe](lookerstudio/README.md).
+
+Entrega funcional validada el 04/11/2026: pipeline cloud con publicación y
+aceptación exitosas para el lote 03/11, informe público como lector y prueba en
+incógnito confirmada por el propietario. La continuidad diaria se registra en
+[Operación](lookerstudio/OPERACION.md).
 
 Power BI queda como antecedente histórico en `powerbi/`; fue reemplazado por Looker Studio y ya no requiere MFA, licencias ni refresh para cerrar la entrega.
 

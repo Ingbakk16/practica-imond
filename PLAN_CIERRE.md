@@ -26,7 +26,9 @@ referencia histórica reproducible.
 - [x] Exigir en schedule el lote correspondiente al día anterior en Argentina.
 - [x] Generar evidencia JSON y logs en `bigquery-diagnostics`.
 - [x] Diagnosticar el [run fallido #21](https://github.com/Ingbakk16/practica-imond/actions/runs/41849903528).
-- [ ] Publicar la versión revisada y comprobar un workflow cloud exitoso.
+- [x] Publicar la versión revisada y comprobar un workflow cloud exitoso:
+  PR #10 integrado en main (`e14f7e0`); run #22, intento 1, con publicación y
+  aceptación exitosas para el lote 03/11/2026.
 
 Prueba manual desde una sesión autorizada, después de un build y conciliaciones
 exitosas:
@@ -76,15 +78,21 @@ se comprobaron visualmente. Evidencia y pruebas de filtros en ESTADO_PROYECTO.md
 ## 4. Acceso, recuperación y continuidad
 
 - [x] Verificar acceso Público — Lector, autorizado por el propietario.
-- [ ] Probar el enlace con una cuenta lectora externa. No debe requerir permisos
+- [x] Probar el enlace en incógnito: el propietario confirmó que abre y muestra
+  los gráficos sin solicitar acceso. No debe requerir permisos
   BigQuery si se mantienen las credenciales del propietario.
-- [ ] Confirmar frescura de fuentes y usar Actualizar datos para verificar una
-  publicación nueva; una pestaña abierta no garantiza redibujado automático.
-- [ ] Recuperar el run fallido con las mismas fechas, semilla y número de pedidos.
-  Comprobar que el lote repetido no agrega registros duplicados.
+- [x] Confirmar frescura de las seis fuentes (una hora) y usar Actualizar datos:
+  lote 03/11/2026, publicación 04/11/2026 19:39:37 UTC, 11.998 pedidos.
+- [x] Recuperar el run fallido y repetir el lote 03/11/2026, semilla 42, 100 pedidos.
+  Run #22, intentos 1 y 2 exitosos. Tras Actualizar datos se mantienen 11.998
+  pedidos y las mismas filas e importes; solo cambia la publicación UTC.
 - [ ] Registrar siete ejecuciones programadas, fecha procesada, resultado,
   publicación y consumo. Los runs anteriores a la corrección son antecedentes.
-- [ ] Verificar presupuesto, cuotas y vigencia del proyecto en la cuenta cloud.
+- [x] Verificar presupuesto, cuotas y vigencia en la cuenta cloud: prueba hasta
+  29/12/2026, USD 300 de crédito; sin presupuesto; cuota 200 TiB/día y por usuario
+  ilimitada. Detalle y límites en ESTADO_PROYECTO.md.
+- [x] Registrar decisión de consumo: el propietario indicó **conservar los límites
+  actuales** el 04/11/2026. No se crea presupuesto ni se cambian cuotas.
 
 Para recuperar faltantes, usar rangos manuales de hasta siete días. No borrar
 tablas ni editar marcadores de lotes. Las pruebas de inyección de fallos

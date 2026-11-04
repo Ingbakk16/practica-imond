@@ -8,7 +8,7 @@ La carga diaria existente se conserva. dbt construye cuatro fuentes de presentac
 y `cloud/publish_looker.py` publica una copia validada para el reporte. No se
 importan CSV en Looker ni se necesita Power BI Service.
 
-**Estado revisado el 04/11/2026:** dataset publicado y cinco fuentes BigQuery
+**Estado revisado el 04/11/2026:** dataset publicado y seis fuentes BigQuery
 conectadas al [informe EcoBottle AR — Reporte comercial](https://datastudio.google.com/u/0/reporting/dfabaac0-911f-4735-b1b9-52733368cff9/page/93oCG).
 El informe tiene cinco páginas y tema Eucalipto. Se conciliaron los principales
 KPIs históricos en la interfaz. Las visualizaciones que no cargaban en el
@@ -16,10 +16,12 @@ navegador integrado se reemplazaron por tablas con barras y valores visibles.
 La revisión de cierre incorporó ranking SQL, controles agrupados de Ventas y
 Clientes, detalle de productos y acceso Público — Lector. Ver la [evidencia y
 los pendientes operativos](../ESTADO_PROYECTO.md).
-En la revisión de cierre se observó el schedule activo y fallido del 04/11
-([run #21](https://github.com/Ingbakk16/practica-imond/actions/runs/41849903528)).
-La publicación visible conserva el lote 02/11; todavía no acredita continuidad.
-No se inspeccionaron IAM ni las variables privadas de GitHub.
+El error interno de BigQuery del run #21 quedó diagnosticado. La corrección está
+integrada en main y el [run #22](https://github.com/Ingbakk16/practica-imond/actions/runs/41898269009)
+publicó y verificó el lote 03/11. Se actualizó el informe y el propietario confirmó
+lectura en incógnito. Las seis fuentes tienen frescura de una hora. El
+[registro de operación](OPERACION.md) separa esta aceptación de los siete días
+programados que quedan por observar.
 
 Las secciones siguientes son la guía de configuración y el diseño objetivo,
 no una certificación de que cada paso se haya ejecutado en esta revisión.

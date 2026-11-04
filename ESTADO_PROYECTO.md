@@ -4,23 +4,33 @@ La entrega final es **BigQuery + Looker Studio**. Power BI fue reemplazado por
 decisión del propietario; sus archivos se conservan como antecedentes.
 Microsoft Entra, MFA, licencias y refresh Power BI dejaron de ser requisitos.
 
-**Estado: cierre local implementado; cierre web y operativo pendiente.**
-No se declara terminada la automatización mientras exista un run programado
-fallido sin diagnosticar y el reporte conserve un lote anterior.
+**Estado: entrega funcional terminada y publicada; observación operativa pendiente.**
+El código está integrado en `main`, el pipeline cloud publicó y verificó el lote
+del 03/11/2026 y el informe funciona para un lector externo. Queda observar siete
+ejecuciones diarias. El propietario decidió conservar los límites de consumo actuales.
 
 ## Evidencia comprobada
 
 - Fuentes históricas: todas las reglas de `generator/validate_raw.py` aprobadas.
 - Warehouse existente: auditoría aprobada, diez CSV iguales a DuckDB, 16 relaciones
   íntegras; ventas históricas ARS 382.410.636,00 y 10.998 pedidos de venta.
-- Informe abierto durante esta revisión: cinco páginas, fuentes publicadas y
-  metadatos visibles. Ventas del período completo: ARS 426.585.126,00; pedidos
-  11.898; ticket 35.853,52.
-- Metadatos visibles: último lote validado 02/11/2026, publicación
-  04/11/2026 01:35:56 UTC. NPS conserva el corte histórico; eso por sí solo no es
+- Informe actualizado mediante **Actualizar datos** después del run #22:
+  cinco páginas y metadatos visibles. Ventas del período completo:
+  ARS 431.786.916,00; pedidos 11.998; ticket 35.988,24.
+- Metadatos visibles: último lote validado 03/11/2026, publicación
+  04/11/2026 19:45:24 UTC, después del segundo intento. NPS conserva el corte histórico; eso por sí solo no es
   un error: los lotes no tienen necesariamente respuestas nuevas.
-- [Validación en main](https://github.com/Ingbakk16/practica-imond/actions/runs/41860889817):
-  exitosa para `cf88bf0`, anterior a los cambios locales de cierre.
+- [PR #10 integrado](https://github.com/Ingbakk16/practica-imond/pull/10)
+  en `main`, merge `e14f7e0`.
+- [CI de los cambios](https://github.com/Ingbakk16/practica-imond/actions/runs/41897779682): exitosa.
+- [Run cloud #22, primer intento](https://github.com/Ingbakk16/practica-imond/actions/runs/41898269009/attempts/1):
+  exitoso en 5m23s. Fecha manual 2026-11-03, semilla 42, 100 pedidos.
+  Publicación y aceptación exitosas; el log confirma metadatos, KPIs históricos y
+  lotes validados. La consulta de aceptación procesó 10.944.462 bytes.
+- [Run #22, segundo intento](https://github.com/Ingbakk16/practica-imond/actions/runs/41898269009/attempts/2):
+  exitoso en 5m14s, repitiendo las mismas entradas. Publicación y aceptación
+  aprobadas. El informe actualizado conserva exactamente ventas, pedidos,
+  ticket y filas de las cuatro fuentes: no se duplicó el lote.
 - [Run programado #21](https://github.com/Ingbakk16/practica-imond/actions/runs/41849903528):
   fallido el 04/11/2026, job `historical`, paso 13 (Build and test BigQuery models).
   El log aportado por el propietario identifica un error interno 500
@@ -68,18 +78,29 @@ durante esta conversación. Estas pruebas no consultan ni escriben BigQuery.
 - Inicio comercial fijo 01/01/2024 y fin relativo a hoy; el intervalo técnico
   de metadatos permanece personalizado, con fin relativo a hoy.
 - Se verificó acceso **Público — Lector** después de la autorización del propietario.
-  Esa configuración no sustituye una prueba de renderizado con un lector anónimo.
+  El propietario probó el enlace en incógnito y confirmó: «Abre y muestra los gráficos».
+- Las seis fuentes tienen frescura de una hora y credenciales del propietario.
+  La fuente del ranking se denomina `Ranking mensual productos`.
 - Evidencia visual: [resumen histórico](lookerstudio/evidencias/resumen-historico.png)
   y [ranking histórico](lookerstudio/evidencias/ventas-ranking-historico.png).
 
-## Pendientes operativos reales
+## Cuenta cloud y pendientes operativos reales
 
-1. Publicar los cambios del repositorio y comprobar una ejecución cloud con
-   publicación y aceptación exitosas. La corrección local no actualiza Actions.
-2. Probar el enlace en una sesión externa/anónima y registrar el resultado.
-3. Registrar continuidad diaria y consumo. Siete ejecuciones requieren
-   observación real; los tests offline no sustituyen ese período.
-4. Confirmar presupuesto y cuotas con la cuenta cloud.
+La consola confirmó que el proyecto tiene una cuenta vinculada en prueba gratuita:
+USD 300 de crédito restantes, 55 días, finalización el 29/12/2026. El resumen del
+1 al 4 de noviembre muestra USD 0,00, con advertencia de demora de facturación.
+La página de presupuestos ofrece crear el primero; no hay presupuesto configurado.
+Cuota de consultas: 200 TiB/día por proyecto y sin límite por usuario; uso mostrado
+5,088 GiB. Son valores observados, no límites adecuados para esta demo.
+No se activó una cuenta pagada ni se modificaron cuotas. Consultado por presupuesto
+y cuotas, el propietario indicó **«Conservar los límites actuales»** el 04/11/2026.
+
+1. Registrar continuidad diaria y consumo durante siete ejecuciones programadas;
+   los tests offline y las reejecuciones manuales no sustituyen ese período.
+2. Conservar el proyecto activo hasta la evaluación; la prueba tiene vencimiento.
+
+Registro de ejecución y próximos siete días: [lookerstudio/OPERACION.md](lookerstudio/OPERACION.md).
+Evidencia del informe actualizado: [publicación validada](lookerstudio/evidencias/publicacion-validada-2026-11-04.png).
 
 ## Entregables
 
