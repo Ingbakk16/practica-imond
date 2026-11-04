@@ -1,3 +1,9 @@
+# Archivo histórico — Power BI
+
+Desde el 04/11/2026, Looker Studio es la entrega final. Esta carpeta conserva
+los reportes y herramientas anteriores. No requiere publicación ni refresh
+para cerrar el proyecto.
+
 # EcoBottle AR conectado a BigQuery
 
 Abrir `EcoBottle_AR.pbip` en Power BI Desktop y usar **Actualizar**.

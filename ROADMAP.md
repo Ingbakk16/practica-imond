@@ -2,6 +2,12 @@
 
 Plan incremental para pasar de las tablas transaccionales al data warehouse y a un conjunto de KPIs listo para analizar en Power BI.
 
+## Entrega vigente — 04/11/2026
+
+El dashboard final es **Looker Studio**, que reemplaza Power BI.
+Las fases siguientes documentan la construcción histórica local. La aceptación
+de la entrega web y la automatización se controla en [PLAN_CIERRE.md](PLAN_CIERRE.md).
+
 ## Resultado objetivo
 
 Construir un modelo estrella reproducible que permita analizar ventas, clientes, comportamiento web y satisfacción, sin modificar los datos de origen y con resultados auditables desde las claves naturales.
@@ -103,7 +109,7 @@ Construir un modelo estrella reproducible que permita analizar ventas, clientes,
 
 **Entregable:** warehouse generado sin errores y con resultados conciliados en [`VALIDACION.md`](VALIDACION.md); auditoría reproducible con `python validate_warehouse.py`.
 
-## Fase 7: Consumo en Power BI
+## Fase 7: Consumo en Power BI (antecedente histórico)
 
 **Objetivo:** preparar una capa analítica clara para el dashboard.
 

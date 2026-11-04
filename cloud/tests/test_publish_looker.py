@@ -127,6 +127,10 @@ class PublishLookerTests(unittest.TestCase):
         self.assertGreater(index, names.index("Verify source preservation"))
         self.assertIn("success()", steps[index]["if"])
         self.assertIn("LOOKER_PUBLISH_ENABLED == 'true'", steps[index]["if"])
+        acceptance = names.index("Verify published Looker delivery")
+        self.assertGreater(acceptance, index)
+        self.assertIn("success()", steps[acceptance]["if"])
+        self.assertIn("--expected-date", steps[acceptance]["run"])
 
 
 if __name__ == "__main__":

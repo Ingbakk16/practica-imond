@@ -1,8 +1,17 @@
 # Roadmap — Generación diaria, BigQuery y dbt
 
+## Estado vigente del cierre — 04/11/2026
+
+**Looker Studio reemplaza Power BI** por decisión del propietario.
+El [plan de cierre](PLAN_CIERRE.md) y el [estado verificado](ESTADO_PROYECTO.md)
+son la referencia vigente. Los avances y casillas de fases 0–4 de este documento
+conservan el historial de implementación; no deben leerse como verificación
+actual de configuración cloud. Se observó el schedule activo, con el run #21
+fallido el 04/11; su causa todavía requiere el log autenticado.
+
 ## Objetivo
 
-Extender la práctica de EcoBottle AR con datos sintéticos diarios y un pipeline en GitHub Actions: generar, cargar en BigQuery, transformar y validar con dbt Core, y consultar desde Power BI.
+Extender la práctica de EcoBottle AR con datos sintéticos diarios y un pipeline en GitHub Actions: generar, cargar en BigQuery, transformar y validar con dbt Core, y consultar desde Looker Studio.
 
 Este roadmap complementa, sin reemplazar, [`ROADMAP.md`](ROADMAP.md). Las reglas de referencia siguen siendo [`README.md`](README.md), [`WORKFLOW.md`](WORKFLOW.md) y [`generator/README.md`](generator/README.md); los controles históricos están en [`PERFILADO.md`](PERFILADO.md) y [`VALIDACION.md`](VALIDACION.md).
 
@@ -25,7 +34,7 @@ GitHub Actions (manual / diario)
   → Python: generar aproximadamente 100 pedidos nuevos y sus registros relacionados
   → Python: cargar un lote completo en BigQuery
   → dbt Core: staging → dimensiones y hechos → tests
-  → Power BI: importar las tablas del warehouse
+  → Publicación transaccional validada → Looker Studio
 ```
 
 Usar tres datasets de BigQuery, en una misma ubicación:
@@ -149,41 +158,21 @@ Las franquicias publicadas de BigQuery incluyen 10 GiB de almacenamiento y 1 TiB
 
 **Procedimiento ante errores:** poner `ECOBOTTLE_DAILY_ENABLED=false` para impedir futuros jobs programados (no cancela uno en curso), revisar los logs y repetir manualmente las fechas afectadas con los mismos parámetros. Recuperar faltantes en rangos de hasta siete días. No borrar tablas ni editar marcadores de lotes para forzar el reintento. Refrescar Power BI únicamente después de que dbt y las conciliaciones terminen correctamente. La recuperación tiene implementación y tests offline, pero no se ha probado mediante fallos inducidos en cloud.
 
-## Fase 5 — Conectar Power BI y cerrar la entrega
+## Fase 5 — Looker Studio y entrega final
 
-**Alternativa Looker Studio implementada en código (04/11/2026):**
-[`lookerstudio/README.md`](lookerstudio/README.md) describe las fuentes, métricas,
-cinco páginas y activación mediante `LOOKER_PUBLISH_ENABLED`. Reutiliza el cron
-y los lotes existentes; no depende del acceso MFA a Microsoft. A diferencia de
-Power BI Import, usa una copia de publicación transaccional para no consultar
-tablas candidatas a medio construir. Esa protección se limita a las fuentes
-Looker; no modifica la construcción del warehouse ni el circuito Power BI.
-La primera publicación en BigQuery y el informe compartido siguen pendientes.
+- [x] Crear cuatro fuentes dbt separadas para ventas, productos, sesiones y NPS.
+- [x] Publicar copia validada y metadatos en una transacción.
+- [x] Crear el informe de cinco páginas y conciliar KPIs históricos (revisión web anterior).
+- [x] Retirar el job Power BI y los requisitos de identidad Microsoft.
+- [x] Implementar verificación de la publicación en el workflow: metadatos,
+  KPIs históricos, lotes validados y fecha esperada en schedule.
+- [ ] Resolver el fallo del run programado #21 y verificar un run de la versión revisada.
+- [ ] Incorporar ranking mensual y completar controles agrupados en el editor.
+- [ ] Probar lectura externa y guardar evidencia de conciliación con el mismo corte.
+- [ ] Registrar continuidad diaria y consumo real durante siete ejecuciones.
 
-**Objetivo:** conservar el dashboard, cambiando su fuente de CSV a BigQuery.
-
-**Generador integrado:** [`powerbi/build_bigquery_project.py`](powerbi/build_bigquery_project.py) conserva la versión parametrizable de `main`, rechaza sobrescrituras y agrega medidas de frescura. Sus tests offline verifican estructura y preservación del reporte; no ejecutan Power Query. Los artefactos ya publicados de `powerbi/bigquery/` se conservan como una entrega validada separada y no se regeneran durante esta integración.
-
-**Estado manual verificado:** seguir [`powerbi/bigquery/README.md`](powerbi/bigquery/README.md) para la entrega publicada y [`powerbi/BIGQUERY.md`](powerbi/BIGQUERY.md) para generar otra copia. La conexión Desktop, publicación en `EcoBottle AR` y actualización manual de Service están comprobadas. Quedan pendientes las tarjetas de frescura, la evidencia de conciliación cloud y las siete ejecuciones. El refresh condicionado al éxito ya está implementado; su habilitación requiere recuperar MFA y configurar la identidad de Microsoft Entra, según [`cloud/POWERBI.md`](cloud/POWERBI.md).
-
-- [x] Sustituir `RutaDW` / importación CSV por el conector de BigQuery en modo Import, con proyecto explícito y permisos de lectura/consulta necesarios.
-- [x] Revisar tipos monetarios, fechas, relaciones, medidas y visualización de las cinco páginas en la variante BigQuery.
-- [ ] Completar la evidencia de conciliación independiente de las cinco páginas contra los KPIs del warehouse cloud con el mismo corte.
-- [ ] Mostrar fecha de datos y última actualización exitosa.
-- [x] Publicar el reporte en Power BI Service, configurar credenciales Google y verificar una actualización manual completada (02/11/2026).
-- [ ] Configurar la identidad de Microsoft Entra y verificar el refresh automático al finalizar el pipeline validado. Implementado en `codex/powerbi-after-bigquery`; activación pendiente de recuperar MFA.
-- [x] Documentar actualización manual en Desktop y Service. Un warehouse actualizado no actualiza por sí solo el `.pbix` local.
-- [x] Actualizar las guías de ejecución, validación y Power BI con ambos circuitos: práctica local y extensión cloud.
-- [ ] Observar al menos siete ejecuciones diarias consecutivas y revisar el consumo real.
-
-**Limitación inicial aceptada:** `dbt build` no es una transacción de todo el warehouse; si falla, algunas tablas pueden haberse actualizado. Con Power BI Import, no refrescar tras un fallo conserva la última copia importada. Evitar refreshes independientes durante la construcción y reconstruir antes de reintentar. La publicación atómica de múltiples tablas queda fuera del alcance inicial.
-
-**Criterio de cierre:** datos diarios visibles en las cinco páginas, resultados conciliados, recuperación probada y consumo dentro del presupuesto acordado.
-
-**Revisión del 02/11/2026:** entrega local terminada y consumo cloud operativo con
-refresh manual. La automatización completa y los controles operativos pendientes
-no se consideran cerrados. Ver [ESTADO_PROYECTO.md](ESTADO_PROYECTO.md).
-Looker Studio continúa como alternativa opcional; no se necesita para esta entrega.
+Ver [PLAN_CIERRE.md](PLAN_CIERRE.md) para pasos, comandos y criterios de aceptación.
+Power BI se conserva como archivo histórico y no bloquea ningún criterio de cierre.
 
 ## Fuera del alcance inicial
 
