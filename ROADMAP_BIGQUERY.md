@@ -25,7 +25,7 @@ Este roadmap complementa, sin reemplazar, [`ROADMAP.md`](ROADMAP.md). Las reglas
 - En pedidos, `venta_neta` incluye IVA y envío; en ítems, no. Mantener importes decimales, no flotantes, en el warehouse.
 - Ventas por fecha del pedido; sesiones por `started_at`; NPS por `responded_at`. Usar fechas de negocio de Argentina y documentar la conversión a UTC cuando corresponda.
 - Conservar clientes anónimos con clave `-1` y compras online con tienda `-1`. No atribuir NPS a un pedido ni sesiones anónimas a personas únicas.
-- Mantener las cinco páginas de Power BI y sus reglas de filtros y medidas.
+- Mantener las cinco páginas del informe y sus reglas de filtros y métricas.
 - Conservar los estados e importes del histórico, incluidos los pedidos pendientes. Esta extensión solo agrega registros: no simula la evolución de pedidos existentes ni introduce otro modelo contable.
 
 ## Arquitectura inicial: lo mínimo necesario
@@ -57,7 +57,7 @@ Reconstruir las tablas analíticas completas cada día. Por el volumen de la pr�
 - [x] Crear la base una sola vez con el generador existente, en una carpeta temporal y sin sobrescribir `raw/`. Conservar la semilla original para poder conciliar con la práctica.
 - [x] Agregar aproximadamente 100 pedidos por día con el segundo generador, más sus clientes, direcciones, ítems y pagos relacionados. Son 100 pedidos, no 100 filas totales.
 - [x] No modificar registros existentes. El objetivo es demostrar el workflow con datos sintéticos, no simular un sistema transaccional completo.
-- [x] Usar Power BI Desktop con refresh manual inicialmente. La automatización de la visualización es opcional y no bloquea el pipeline.
+- [x] Usar Looker Studio conectado a las fuentes publicadas y validadas.
 - [ ] Confirmar que el proyecto elegido está vinculado a la cuenta de facturación de la prueba y registrar su fecha de vencimiento. Los créditos se informaron, pero el vínculo del proyecto y el vencimiento todavía no se verificaron.
 - [ ] Configurar BigQuery on-demand, sin reservas de capacidad. Revisar antes del vencimiento si continuar requiere activar facturación de pago o detener la demo.
 - [ ] Configurar alertas de presupuesto, cuotas de consultas y límites de bytes por consulta donde sea posible. Las alertas no bloquean cargos; no prometer costo cero.
@@ -65,7 +65,7 @@ Reconstruir las tablas analíticas completas cada día. Por el volumen de la pr�
 
 La base conserva el corte original al 30/09/2025. Los lotes diarios comienzan desde la fecha de puesta en marcha, procesando normalmente el día anterior en Argentina. No hace falta completar el intervalo histórico hasta la puesta en marcha: documentar ese salto como parte de la demo. Permitir rangos manuales solo para pruebas o recuperación de días omitidos desde su inicio.
 
-Las franquicias publicadas de BigQuery incluyen 10 GiB de almacenamiento y 1 TiB mensual de consultas on-demand. Revisarlas al configurar el proyecto; también cuentan las consultas de dbt, sus tests y Power BI. El sandbox sin facturación tiene otras restricciones, incluida la expiración de tablas/particiones a los 60 días, y no es el objetivo inicial.
+Las franquicias publicadas de BigQuery incluyen 10 GiB de almacenamiento y 1 TiB mensual de consultas on-demand. Revisarlas al configurar el proyecto; también cuentan las consultas de dbt, sus tests y Looker Studio. El sandbox sin facturación tiene otras restricciones, incluida la expiración de tablas/particiones a los 60 días, y no es el objetivo inicial.
 
 **Criterio de cierre:** decisiones registradas, proyecto y vencimiento verificados, y controles básicos de consumo configurados. No marcar la configuración cloud como completada solo por disponer de créditos.
 
@@ -154,10 +154,10 @@ Las franquicias publicadas de BigQuery incluyen 10 GiB de almacenamiento y 1 TiB
 2. **Confirmar límites de consumo:** verificar proyecto y facturación, vencimiento del crédito, alertas de presupuesto y cuotas de consultas. Las alertas no bloquean cargos. No habilitar cron sin la confirmación del propietario.
 3. **Elegir la fecha de inicio:** configurar `ECOBOTTLE_DAILY_START_DATE` (`YYYY-MM-DD`) en el environment `bigquery`, usando la primera fecha de negocio acordada para la automatización. No usar automáticamente el corte histórico ni las fechas de pruebas. Mantener semilla 42 y 100 pedidos, también al reintentar fechas ya cargadas con esos parámetros.
 4. **Activar el cron:** configurar la variable **del repositorio** `ECOBOTTLE_DAILY_ENABLED=true`. El horario existente es 06:17 UTC, equivalente a 03:17 Argentina; procesa hasta el día anterior. Activar las notificaciones de fallos de GitHub Actions para la cuenta responsable.
-5. **Comprobar el primer run programado:** confirmar que el job no se omite y revisar fechas seleccionadas, carga, `dbt build`, ambas conciliaciones y marcas en `ecobottle_ops.daily_validations`. Consultar el artifact `bigquery-diagnostics`. No refrescar Power BI si falla algún control.
+5. **Comprobar el primer run programado:** confirmar que el job no se omite y revisar fechas seleccionadas, carga, `dbt build`, ambas conciliaciones y marcas en `ecobottle_ops.daily_validations`. Consultar el artifact `bigquery-diagnostics`. No publicar nuevas fuentes si falla algún control.
 6. **Observar siete ejecuciones programadas:** registrar resultados y consumo real; comprobar que no quedan fechas pendientes desde el inicio acordado. Las siete reejecuciones manuales ya probadas no sustituyen esta observación del cron.
 
-**Procedimiento ante errores:** poner `ECOBOTTLE_DAILY_ENABLED=false` para impedir futuros jobs programados (no cancela uno en curso), revisar los logs y repetir manualmente las fechas afectadas con los mismos parámetros. Recuperar faltantes en rangos de hasta siete días. No borrar tablas ni editar marcadores de lotes para forzar el reintento. Refrescar Power BI únicamente después de que dbt y las conciliaciones terminen correctamente. La recuperación tiene implementación y tests offline, pero no se ha probado mediante fallos inducidos en cloud.
+**Procedimiento ante errores:** poner `ECOBOTTLE_DAILY_ENABLED=false` para impedir futuros jobs programados (no cancela uno en curso), revisar los logs y repetir manualmente las fechas afectadas con los mismos parámetros. Recuperar faltantes en rangos de hasta siete días. No borrar tablas ni editar marcadores de lotes para forzar el reintento. Publicar las fuentes de Looker únicamente después de que dbt y las conciliaciones terminen correctamente. La recuperación tiene implementación y tests offline, pero no se ha probado mediante fallos inducidos en cloud.
 
 ## Fase 5 — Looker Studio y entrega final
 
@@ -173,7 +173,7 @@ Las franquicias publicadas de BigQuery incluyen 10 GiB de almacenamiento y 1 TiB
 - [ ] Registrar continuidad diaria y consumo real durante siete ejecuciones.
 
 Ver [PLAN_CIERRE.md](PLAN_CIERRE.md) para pasos, comandos y criterios de aceptación.
-Power BI se conserva como archivo histórico y no bloquea ningún criterio de cierre.
+Los archivos de Power BI fueron retirados del repositorio; sus antecedentes se conservan en el historial de Git.
 
 ## Fuera del alcance inicial
 
@@ -190,6 +190,4 @@ Revisar estas opciones solo si el volumen, costo o uso real lo exige. La primera
 
 - [Sandbox y restricciones de BigQuery](https://cloud.google.com/bigquery/docs/sandbox)
 - [Precios y franquicias de BigQuery](https://cloud.google.com/bigquery/pricing)
-- [Conector BigQuery para Power BI](https://learn.microsoft.com/en-us/power-query/connectors/google-bigquery)
-- [Actualización de datos en Power BI](https://learn.microsoft.com/en-us/power-bi/connect-data/refresh-data)
 - [Schedules de GitHub Actions](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule)

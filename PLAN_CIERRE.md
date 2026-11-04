@@ -8,7 +8,7 @@ Una tarea solo se marca completa cuando tiene evidencia de su resultado.
 
 - [x] Definir Looker como dashboard final en README y guías.
 - [x] Retirar el job Power BI del workflow cloud y su prueba específica de CI.
-- [x] Conservar los PBIX y scripts como archivo histórico.
+- [x] Retirar los PBIX, proyectos, scripts y documentación de Power BI que ya no se usan. Sus antecedentes permanecen en el historial de Git.
 - [x] Eliminar MFA, Entra y refresh Power BI de los requisitos de cierre.
 
 Resultado: el pipeline final depende de Google Cloud y Looker, con DuckDB como
@@ -48,7 +48,8 @@ La causa del run #21 es un error interno 500 `backendError` en BigQuery.
 Se implementó `cloud/build_dbt.py`: hasta tres builds completos, esperas de
 15 y 30 segundos y reintento exclusivo de errores transitorios. Los errores
 SQL, de permisos y tests de calidad fallidos detienen el proceso.
-Pruebas offline: 64 tests cloud aprobados.
+Pruebas offline: 56 tests cloud vigentes aprobados después de retirar los ocho
+tests exclusivos de Power BI (64 antes de la limpieza).
 
 ## 3. Completar y validar las cinco páginas
 

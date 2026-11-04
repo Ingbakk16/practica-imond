@@ -109,19 +109,14 @@ Construir un modelo estrella reproducible que permita analizar ventas, clientes,
 
 **Entregable:** warehouse generado sin errores y con resultados conciliados en [`VALIDACION.md`](VALIDACION.md); auditoría reproducible con `python validate_warehouse.py`.
 
-## Fase 7: Consumo en Power BI (antecedente histórico)
+## Fase 7: Informe en Looker Studio
 
-**Objetivo:** preparar una capa analítica clara para el dashboard.
+- [x] Publicar fuentes separadas y validadas en BigQuery.
+- [x] Crear las cinco páginas del informe y documentar las métricas.
+- [x] Verificar filtros, ranking mensual y conciliación histórica.
+- [x] Probar acceso público como lector.
 
-- [x] Importar los CSV de `dw/`.
-- [x] Reproducir las relaciones del modelo estrella.
-- [x] Ocultar claves técnicas en la vista del reporte.
-- [x] Crear medidas para ventas, pedidos, ticket, usuarios y NPS.
-- [x] Crear páginas para resumen, ventas, clientes, adquisición y satisfacción.
-- [x] Verificar que los filtros de fecha, canal, provincia y producto funcionen.
-- [x] Documentar las medidas y sus reglas de inclusión en [`powerbi/`](powerbi/).
-
-**Entregable:** [`powerbi/EcoBottle_AR.pbix`](powerbi/EcoBottle_AR.pbix), construido y comprobado en Power BI Desktop. Incluye cinco páginas y datos importados; proyecto editable y controles en [`powerbi/ENTREGA.md`](powerbi/ENTREGA.md).
+**Entregable:** informe y [guía de Looker Studio](lookerstudio/README.md).
 
 ## Definición de terminado
 
@@ -133,4 +128,4 @@ El proyecto está listo cuando:
 - Las consultas KPI no duplican pedidos ni importes.
 - Los resultados principales concilian con las reglas del generador.
 - `dw/modelo_estrella.md` describe las relaciones implementadas.
-- Los CSV de `dw/` pueden consumirse directamente en Power BI.
+- Las fuentes publicadas alimentan el informe de Looker Studio y sus controles de aceptación aprueban.

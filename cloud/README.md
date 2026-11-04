@@ -2,7 +2,7 @@
 
 **Visualización final: Looker Studio.** Ver [`lookerstudio/README.md`](../lookerstudio/README.md). La publicación `LOOKER_PUBLISH_ENABLED=true` se ejecuta después de las validaciones del workflow y conserva la última copia válida en `ecobottle_looker`. El informe y el dataset ya existen; consultar [PLAN_CIERRE.md](../PLAN_CIERRE.md) antes de repetir pasos de aprovisionamiento.
 
-Este circuito conserva la práctica local. Genera la base original con semilla 42, valida los CSV, carga las 13 fuentes una sola vez y construye las seis dimensiones y cuatro hechos con dbt Core. Admite lotes diarios manuales y programación (ver fase 4 abajo). Después publica Looker y ejecuta `verify_looker.py`: metadatos, KPIs históricos, validación de lotes y fecha esperada en runs programados. Power BI fue retirado del workflow; [POWERBI.md](POWERBI.md) se conserva como documentación histórica.
+Este circuito conserva la práctica local. Genera la base original con semilla 42, valida los CSV, carga las 13 fuentes una sola vez y construye las seis dimensiones y cuatro hechos con dbt Core. Admite lotes diarios manuales y programación (ver fase 4 abajo). Después publica Looker y ejecuta `verify_looker.py`: metadatos, KPIs históricos, validación de lotes y fecha esperada en runs programados. La entrega final utiliza exclusivamente Looker Studio.
 
 ## 1. Preparar el proyecto una sola vez
 
@@ -87,7 +87,7 @@ El artifact **`bigquery-diagnostics`** conserva logs, resumen, `manifest.json` y
 
 **Comprobación después de corregir errores de acceso o SQL:** ejecutar primero el workflow con `daily_date` vacío. Un resultado verde debe implicar que carga, `dbt build` y conciliación terminaron sin errores (el shell ahora usa `pipefail`, para que `tee` no oculte fallos). Ejecutarlo por segunda vez y confirmar en `load.log` que el bootstrap histórico se omite. Solo después probar una fecha diaria. Los runs anteriores a esta corrección podían figurar verdes aunque los comandos cloud fallaran: no constituyen aceptación de la fase 2.
 
-No hay publicación atómica de todo el warehouse: si dbt falla, corregir y volver a construir antes de consumirlo. No refrescar Power BI en esta fase.
+No hay publicación atómica de todo el warehouse: si dbt falla, corregir y volver a construir antes de consumirlo. Consultar las fuentes publicadas solo después de las validaciones.
 
 ## 5. Reintentos y protección de los datos
 
@@ -144,7 +144,7 @@ Para conciliar: `python cloud/reconcile.py --database /ruta/a/warehouse.duckdb`,
 - [ ] Workflow cloud exitoso y artifact revisado.
 - [ ] BigQuery concilia con el histórico DuckDB.
 - [ ] Segundo run omite la carga y no agrega duplicados.
-- [ ] Ninguna fuente local ni reporte Power BI fue modificado.
+- [ ] Ninguna fuente histórica local fue modificada.
 
 Hasta ejecutar los controles cloud, la fase está implementada pero no verificada de punta a punta. Ver [`ROADMAP_BIGQUERY.md`](../ROADMAP_BIGQUERY.md).
 
@@ -188,7 +188,7 @@ python cloud/reconcile_daily.py --dir /tmp/ecobottle-day
 
 `cloud/setup_daily.py` crea tablas vacías antes del primer `dbt build`, incluso si solo se quiere reconstruir el histórico. La carga diaria se niega a comenzar sin bootstrap histórico completo, mantiene registros nuevos en `ecobottle_raw.daily_*` (no trunca las fuentes históricas), e identifica cada día con un manifiesto y fingerprint en `ecobottle_ops.daily_batches`. Solo los lotes `complete` son visibles para dbt. Repetir un lote completo con la misma entrada no escribe; cambiar semilla, versión o contenido para una fecha existente se rechaza. Repetir uno `loading` reemplaza únicamente sus propias filas; las tablas analíticas se reconstruyen con dbt después. Ejecutar **un solo escritor cloud a la vez**: el workflow serializa sus ejecuciones, pero los comandos locales simultáneos no están coordinados.
 
-El workflow **Build BigQuery warehouse** admite opcionalmente `daily_date`, `daily_seed` y `daily_orders`. Con la fecha vacía solo ejecuta el histórico, como en fase 2. Con fecha, valida primero el histórico, luego genera y carga ese día, ejecuta dbt nuevamente y concilia tanto el histórico como el lote. Un fallo después de marcar `complete`, pero antes de dbt, se recupera repitiendo la misma fecha y semilla: la carga se omite y dbt se reconstruye. No refrescar Power BI tras fallos de dbt.
+El workflow **Build BigQuery warehouse** admite opcionalmente `daily_date`, `daily_seed` y `daily_orders`. Con la fecha vacía solo ejecuta el histórico, como en fase 2. Con fecha, valida primero el histórico, luego genera y carga ese día, ejecuta dbt nuevamente y concilia tanto el histórico como el lote. Un fallo después de marcar `complete`, pero antes de dbt, se recupera repitiendo la misma fecha y semilla: la carga se omite y dbt se reconstruye. Un fallo de dbt impide publicar nuevas fuentes para Looker.
 
 ## Fase 4: rangos manuales y programación opcional
 
@@ -196,7 +196,7 @@ El workflow **Build BigQuery warehouse** conserva la ejecución histórica sin f
 
 El cron está **desactivado por defecto**: el job programado solo se ejecuta si la variable **del repositorio** (Settings → Secrets and variables → Actions → Variables) **`ECOBOTTLE_DAILY_ENABLED`** vale exactamente `true`. Debe ser de repositorio porque el `if` del job se evalúa antes de cargar variables del environment. Antes de activarlo, verificar facturación, vencimiento de créditos, presupuesto y cuota de consultas; elegir y registrar la primera fecha de la demo en la variable **del environment `bigquery`** `ECOBOTTLE_DAILY_START_DATE` (`YYYY-MM-DD`, desde 2025-10-01). Usar la fecha real de puesta en marcha, no la fecha del corte histórico ni las fechas de pruebas manuales. No es obligatorio llenar el intervalo anterior. El cron corre a las 06:17 UTC (03:17 de Argentina); selecciona hasta el día anterior según `America/Argentina/Buenos_Aires`, no según el reloj UTC del runner.
 
-Cada ejecución consulta los días **validados** desde la fecha de inicio; recupera fechas faltantes y lotes que se cargaron pero fallaron antes de completar dbt y ambas conciliaciones. La tabla `ecobottle_ops.daily_validations` conserva el fingerprint y se escribe **después** de estos controles; `daily_batches.status = complete` solo acredita la carga de origen. Si faltan más de siete fechas, el workflow falla explícitamente, sin saltar ni cargar una selección parcial: recuperar por rangos manuales de hasta siete días y mantener los mismos parámetros para fechas ya cargadas. Un fallo de dbt después de cargar se recupera sin duplicar fuentes. Consultar logs por fecha en `bigquery-diagnostics` (retención de siete días); GitHub Actions puede retrasar u omitir cron, por eso no se asume ejecución puntual. Si hay fallos, no refrescar Power BI. No se configura refresh automático del reporte.
+Cada ejecución consulta los días **validados** desde la fecha de inicio; recupera fechas faltantes y lotes que se cargaron pero fallaron antes de completar dbt y ambas conciliaciones. La tabla `ecobottle_ops.daily_validations` conserva el fingerprint y se escribe **después** de estos controles; `daily_batches.status = complete` solo acredita la carga de origen. Si faltan más de siete fechas, el workflow falla explícitamente, sin saltar ni cargar una selección parcial: recuperar por rangos manuales de hasta siete días y mantener los mismos parámetros para fechas ya cargadas. Un fallo de dbt después de cargar se recupera sin duplicar fuentes. Consultar logs por fecha en `bigquery-diagnostics` (retención de siete días); GitHub Actions puede retrasar u omitir cron, por eso no se asume ejecución puntual. Si hay fallos, se conserva la publicación anterior. La frescura de Looker se configura en el conector, no mediante un job de refresh.
 
 **Antes de dar por cerrada la fase 4:** verificar que una fecha omitida se detecte, observar siete ejecuciones programadas, revisar consumo y configurar avisos de fallo de Actions. El usuario confirmó reejecuciones exitosas de fechas repetidas y de siete días consecutivos. Las pruebas de fallos inducidos durante la carga y antes de dbt se difieren por decisión del usuario; no se consideran aprobadas y la recuperación cloud sigue sin validarse ante esos fallos. La programación no debe activarse hasta que el propietario confirme los límites de costo. Seguir el [plan de puesta en marcha](../ROADMAP_BIGQUERY.md#plan-de-puesta-en-marcha-de-la-automatización), incluida la publicación en `main` antes de habilitar el cron.
 

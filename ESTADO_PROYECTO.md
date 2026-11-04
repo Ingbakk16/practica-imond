@@ -1,7 +1,7 @@
 # Estado del proyecto — 04/11/2026
 
 La entrega final es **BigQuery + Looker Studio**. Power BI fue reemplazado por
-decisión del propietario; sus archivos se conservan como antecedentes.
+decisión del propietario; los archivos retirados siguen disponibles en el historial de Git.
 Microsoft Entra, MFA, licencias y refresh Power BI dejaron de ser requisitos.
 
 **Estado: entrega funcional terminada y publicada; observación operativa pendiente.**
@@ -44,10 +44,16 @@ ejecuciones diarias. El propietario decidió conservar los límites de consumo a
 
 ## Implementación de cierre en el repositorio
 
-Verificación local del cambio: **64 tests cloud aprobados**, incluidos los nuevos
+Verificación local antes de la limpieza: **64 tests cloud aprobados**, incluidos los nuevos
 controles de aceptación; `dbt parse` aprobado y ambos workflows parseados como
 YAML. La auditoría histórica y los siete tests del generador también pasaron
 durante esta conversación. Estas pruebas no consultan ni escriben BigQuery.
+
+Limpieza posterior del repositorio: se retiraron los proyectos, binarios, scripts
+y documentación de Power BI, junto con sus ocho tests exclusivos. Los **56 tests
+cloud vigentes aprobaron** después de retirarlos. El entorno virtual `marketing/`
+dejó de versionarse y se conserva únicamente en la computadora local, ignorado
+por Git. Se comprobaron los enlaces locales de la documentación sin archivos ausentes.
 
 - Looker pasa a ser la entrega oficial en las guías.
 - Se retira el job Power BI del workflow, aunque sus variables antiguas existan.
@@ -111,4 +117,4 @@ Evidencia del informe actualizado: [publicación validada](lookerstudio/evidenci
 | Ranking mensual para el conector | [ranking_mensual.sql](lookerstudio/ranking_mensual.sql) |
 | Pipeline | [.github/workflows/bigquery.yml](.github/workflows/bigquery.yml), `cloud/`, `dbt/` |
 | Referencia local reproducible | `raw/` → `sql/` → DuckDB → `dw/` |
-| Antecedentes Power BI | `powerbi/`, [cloud/POWERBI.md](cloud/POWERBI.md) |
+| Antecedentes Power BI | Historial de Git anterior a la limpieza del repositorio |

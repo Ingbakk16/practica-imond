@@ -210,9 +210,8 @@ __marimo__/
 *.duckdb
 *.duckdb.wal
 
-# Cachés y configuración local de Power BI Projects
-**/.pbi/
-powerbi/.build/
+# Entorno virtual local
+marketing/
 
 # dbt outputs and temporary Google authentication files
 dbt/logs/

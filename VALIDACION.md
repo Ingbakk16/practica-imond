@@ -54,4 +54,4 @@ git diff --exit-code -- dw/
 - **NPS:** 3.083 respuestas, 122 anónimas (`customer_key = -1`); 1.428 promotores y 503 detractores dan **NPS 30,0**. La fecha analítica es `responded_at`, no la fecha de pedido.
 - **Clientes y tienda:** los pedidos e ítems no tienen clientes desconocidos; 7.286 pedidos online usan `store_key = -1` (sin tienda). Las fechas y claves de los cuatro hechos son congruentes con el origen según los controles SQL.
 
-La referencia mensual completa del origen y sus definiciones se encuentran en [`PERFILADO.md`](PERFILADO.md). Para consumo en Power BI, seguir [`powerbi/README.md`](powerbi/README.md).
+La referencia mensual completa del origen y sus definiciones se encuentran en [`PERFILADO.md`](PERFILADO.md). Para consultar el informe, seguir la [guía de Looker Studio](lookerstudio/README.md).
